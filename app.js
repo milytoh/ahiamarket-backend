@@ -1,15 +1,16 @@
 const path = require("path");
 
 const express = require("express");
-
-require('dotenv').config();
-const cors = require('cors')
-const app = express();
 const passport = require('passport')
+require('dotenv').config();
+
+const app = express();
+require('./middlewares/passport')
 
 
 const authRoute = require("./routes/auth");
 const productsRoute = require("./routes/products");
+
 
 app.use(express.json());
 
@@ -24,11 +25,14 @@ app.use((req, res, next) => {
   next();
 });
 
-app.use(passport.initialize())
+app.use(passport.initialize());
+
+
+
 
 app.use("/account", authRoute);
 app.use(productsRoute);
-
+ 
 //error meddleware
 app.use((error, req, res, nex) => {
   console.log(error);

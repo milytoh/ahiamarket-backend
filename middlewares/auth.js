@@ -13,7 +13,7 @@ exports.isAuth = (req, res, next) => {
   }
 
   const token = authHeader.split(" ")[1];
-  const key = process.env.secreat_key;
+  const key = process.env.JWT_SECRET;
 
   try {
     const decoded = jwt.verify(token, key);

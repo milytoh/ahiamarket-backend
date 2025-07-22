@@ -11,10 +11,10 @@ exports.signup = async (req, res, next) => {
   const { fullname, email, phone, password } = req.body;
 
   const result = validationResult(req);
-   
-  //checking if any field is invalid 
+
+  //checking if any field is invalid
   if (!result.isEmpty()) {
-     return res.status(400).json({
+    return res.status(400).json({
       message: "Invalid inputs",
       error: result.array().map((err) => ({
         field: err.path,
@@ -94,17 +94,16 @@ exports.login = async (req, res, next) => {
       const error = new Error("incorrect password");
       error.status = 401;
       throw error;
-     
     }
-   
-    const key = process.env.secreat_key;
+
+    const jwt_secret = process.env.JWT_SECRET;
     // generating a jwtoken
     const token = jwt.sign(
       {
         userId: user._id,
         email: user.email,
       },
-      key,
+      jwt_secret,
       {
         expiresIn: "1h",
       }
@@ -117,5 +116,35 @@ exports.login = async (req, res, next) => {
     });
   } catch (err) {
     next(err);
+  }
+};
+
+
+//authentication with google
+exports.googleAuth = (req, res, next) => {
+  
+  
+  try {
+    // Authentication successful
+    const token = req.user.token;
+    const user = req.user;
+
+    return res.json({
+      success: true,
+      message: "Authentication successful",
+      token,
+      // user: {
+      //   name: user.name,
+      //   email: user.email,
+      //   picture: user.picture,
+      //   googleId: user.googleId,
+      // },
+    });
+  } catch (err) {
+    console.log(err);
+    const error = new Error(" Google authentication failed");
+    error.status(401);
+
+    next(error);
   }
 };
