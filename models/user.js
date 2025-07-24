@@ -12,6 +12,11 @@ class User {
     return user;
   }
 
+  async findAllUsers() {
+    const users = await this.collection.find().toArray();
+    return users;
+  }
+
   async findUserById(id) {
     return await this.collection.findOne({ _id: id });
   }

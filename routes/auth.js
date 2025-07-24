@@ -27,10 +27,7 @@ router.post(
     .trim()
     .isLength({ min: 6 })
     .withMessage("password legnth must be 5 characters and above"),
-  body("phone")
-    .notEmpty()
-    .isLength({ min: 10 })
-    .withMessage("provide a valid phone number"),
+ 
   authController.signup
 );
 router.post("/login", authController.login);

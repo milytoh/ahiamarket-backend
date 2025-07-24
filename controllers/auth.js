@@ -8,7 +8,7 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 
 exports.signup = async (req, res, next) => {
-  const { fullname, email, phone, password } = req.body;
+  const { fullname, email,  password } = req.body;
 
   const result = validationResult(req);
 
@@ -27,12 +27,15 @@ exports.signup = async (req, res, next) => {
     const db = await mongodbConnect();
     const userModel = new User(db);
 
+    console.log(email)
+
     const userEmail = await userModel.findUserByEmail(email);
 
-    console.log(userEmail.length);
+    console.log(userEmail)
+    
 
     // checking if users email already exist
-    if (userEmail.length !== 0) {
+    if (userEmail) {
       const error = new Error("user with the email already exist");
       throw error;
     }
@@ -43,9 +46,11 @@ exports.signup = async (req, res, next) => {
     const userData = {
       fullname: fullname,
       email: email,
-      phone: phone,
+      // phone: phone,
       password: hashed_pwd,
       email_is_verified: false,
+      provider: "local",
+      googleId: null,
       role: ["buyer"],
       is_vendor_approved: false,
       vendor_profile: null,
@@ -66,7 +71,7 @@ exports.signup = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: "account created succesfuly",
-      userData: user,
+      // userData: user,
     });
   } catch (err) {
     next(err);
@@ -113,32 +118,62 @@ exports.login = async (req, res, next) => {
       success: true,
       message: "Login successful!",
       token: token,
+    
     });
   } catch (err) {
     next(err);
   }
 };
 
-
 //authentication with google
-exports.googleAuth = (req, res, next) => {
-  
-  
+exports.googleAuth = async (req, res, next) => {
+  const db = await mongodbConnect();
+  const userModel = new User(db);
+
   try {
-    // Authentication successful
+    
     const token = req.user.token;
     const user = req.user;
+
+
+    const userData = {
+      fullname: user.name,
+      email: user.email,
+      // phone: phone,
+      password: null,
+      email_is_verified: true,
+      provider: "google",
+      googleId: user.googleId,
+      role: ["buyer"],
+      is_vendor_approved: false,
+      vendor_profile: null,
+      wallet: null,
+      created_at: Date.now(),
+      updated_at: Date.now(),
+    };
+   
+
+    const users = await userModel.findAllUsers();
+    console.log(users)
+
+    const userEmail = await userModel.findUserByEmail(user.email);
+
+    if (!userEmail) {
+      const result = await userModel.signup(userData);
+      if (!result) {
+        const error = new Error("creating account failed!");
+        error.status = 409;
+        throw error;
+      }
+    }
+
+    
 
     return res.json({
       success: true,
       message: "Authentication successful",
       token,
-      // user: {
-      //   name: user.name,
-      //   email: user.email,
-      //   picture: user.picture,
-      //   googleId: user.googleId,
-      // },
+      userData: userData,
     });
   } catch (err) {
     console.log(err);

@@ -14,6 +14,8 @@ passport.use(
     async (accessToken, refreshToken, profile, done) => {
       // console.log("Google profile:", profile);
 
+      console.log(profile)
+
       const user = {
         googleId: profile.id,
         name: profile.displayName,
