@@ -1,16 +1,14 @@
 const path = require("path");
 
 const express = require("express");
-const passport = require('passport')
-require('dotenv').config();
+const passport = require("passport");
+require("dotenv").config();
 
 const app = express();
-require('./middlewares/passport')
-
+require("./middlewares/passport");
 
 const authRoute = require("./routes/auth");
 const productsRoute = require("./routes/products");
-
 
 app.use(express.json());
 
@@ -27,12 +25,9 @@ app.use((req, res, next) => {
 
 app.use(passport.initialize());
 
-
-
-
 app.use("/account", authRoute);
 app.use(productsRoute);
- 
+
 //error meddleware
 app.use((error, req, res, nex) => {
   console.log(error);
@@ -54,3 +49,4 @@ app.listen(PORT, (err) => {
   }
   console.log(`server is runing at port ${PORT}`);
 });
+ 

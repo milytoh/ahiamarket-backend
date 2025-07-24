@@ -6,9 +6,11 @@ const User = require("../models/user");
 const mongodbConnect = require("../models/db");
 const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
+const sendOtpEmail = require("../utils/sendOtp");
+const generateOtp = require("../utils/otpGenerator");
 
 exports.signup = async (req, res, next) => {
-  const { fullname, email,  password } = req.body;
+  const { fullname, email, password } = req.body;
 
   const result = validationResult(req);
 
@@ -27,12 +29,7 @@ exports.signup = async (req, res, next) => {
     const db = await mongodbConnect();
     const userModel = new User(db);
 
-    console.log(email)
-
     const userEmail = await userModel.findUserByEmail(email);
-
-    console.log(userEmail)
-    
 
     // checking if users email already exist
     if (userEmail) {
@@ -42,12 +39,18 @@ exports.signup = async (req, res, next) => {
 
     const hashed_pwd = await bcrypt.hash(password, 12);
 
+    //generating Otp
+    const otp = generateOtp();
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
     // grouping user data object
     const userData = {
       fullname: fullname,
       email: email,
       // phone: phone,
       password: hashed_pwd,
+      otp: otp,
+      otpExpiresAt: otpExpiresAt,
       email_is_verified: false,
       provider: "local",
       googleId: null,
@@ -68,10 +71,44 @@ exports.signup = async (req, res, next) => {
 
     const user = await userModel.findUserById(result.insertedId);
 
+    await sendOtpEmail(email, otp);
+
     res.status(201).json({
       success: true,
       message: "account created succesfuly",
       // userData: user,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//email verification
+exports.emailVerify = async (req, res, next) => {
+  const { email, otp } = req.body;
+
+  try {
+    const db = await mongodbConnect();
+    const userModel = new User(db);
+
+    const user = await userModel.findUserByEmail(email);
+
+    if (!user) {
+      const error = new Error('User not found"');
+      error.status = 404;
+      throw error;
+    }
+
+    if (user.otp !== otp || user.otpExpiresAt < Date.now()) {
+      const error = new Error("Invalid or expired OTP");
+      error.status = 400;
+      throw error;
+    }
+
+
+    res.status(200).json({
+      success: true,
+      message: "Email verified successfully. You can now login.",
     });
   } catch (err) {
     next(err);
@@ -118,7 +155,6 @@ exports.login = async (req, res, next) => {
       success: true,
       message: "Login successful!",
       token: token,
-    
     });
   } catch (err) {
     next(err);
@@ -131,10 +167,8 @@ exports.googleAuth = async (req, res, next) => {
   const userModel = new User(db);
 
   try {
-    
     const token = req.user.token;
     const user = req.user;
-
 
     const userData = {
       fullname: user.name,
@@ -151,10 +185,9 @@ exports.googleAuth = async (req, res, next) => {
       created_at: Date.now(),
       updated_at: Date.now(),
     };
-   
 
     const users = await userModel.findAllUsers();
-    console.log(users)
+    console.log(users);
 
     const userEmail = await userModel.findUserByEmail(user.email);
 
@@ -166,8 +199,6 @@ exports.googleAuth = async (req, res, next) => {
         throw error;
       }
     }
-
-    
 
     return res.json({
       success: true,

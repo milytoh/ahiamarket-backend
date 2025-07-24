@@ -1,7 +1,7 @@
 const express = require("express");
 const { body } = require("express-validator");
 
-const passport = require('passport')
+const passport = require("passport");
 
 const router = express.Router();
 
@@ -27,10 +27,12 @@ router.post(
     .trim()
     .isLength({ min: 6 })
     .withMessage("password legnth must be 5 characters and above"),
- 
+
   authController.signup
 );
 router.post("/login", authController.login);
+
+router.post("/email/verify", authController.emailVerify);
 
 //google auth
 router.get(
@@ -43,6 +45,5 @@ router.get(
   passport.authenticate("google", { session: false, failWithError: true }),
   authController.googleAuth
 );
-
 
 module.exports = router;
