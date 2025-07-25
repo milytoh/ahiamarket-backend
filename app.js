@@ -5,7 +5,7 @@ const passport = require("passport");
 require("dotenv").config();
 
 const app = express();
-require("./middlewares/passport");
+require("./utils/passport");
 
 const authRoute = require("./routes/auth");
 const productsRoute = require("./routes/products");

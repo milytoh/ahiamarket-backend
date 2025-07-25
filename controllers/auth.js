@@ -8,6 +8,7 @@ const jwt = require("jsonwebtoken");
 const { validationResult } = require("express-validator");
 const sendOtpEmail = require("../utils/sendOtp");
 const generateOtp = require("../utils/otpGenerator");
+const sendPwdResetEmail = require("../utils/sendPwdReset");
 
 exports.signup = async (req, res, next) => {
   const { fullname, email, password } = req.body;
@@ -146,7 +147,7 @@ exports.login = async (req, res, next) => {
 
     //checking if email is verified befor allowing you to login
     if (!user.email_is_verified) {
-      const err = new Error('please verify your email to continue');
+      const err = new Error("please verify your email to continue");
       err.status = 403;
       throw err;
     }
@@ -170,6 +171,95 @@ exports.login = async (req, res, next) => {
       token: token,
     });
   } catch (err) {
+    next(err);
+  }
+};
+
+// sending a rest password link to your email
+exports.requestPasswordReset = async (req, res, next) => {
+  const email = req.body.email;
+
+  try {
+    const db = await mongodbConnect();
+    const userModel = new User(db);
+
+    const user = await userModel.findUserByEmail(email);
+    if (!user) {
+      const error = new Error("user not found");
+      error.status = 404;
+      throw error;
+    }
+    const jwt_secret = process.env.JWT_SECRET;
+    // generating a jwtoken
+    const token = jwt.sign(
+      {
+        userId: user._id,
+        email: user.email,
+      },
+      jwt_secret,
+      {
+        expiresIn: "1h",
+      }
+    );
+    console.log(4444, token);
+
+    await sendPwdResetEmail(email, user._id, token);
+
+    res.status(200).json({
+      success: true,
+      message: "check your email a password reset link has been sent to you!",
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+//pasword reset
+exports.passwordReset = async (req, res, next) => {
+  const { password } = req.body;
+  const { id, token } = req.query;
+
+  console.log(req.query);
+
+  console.log(id, token, password);
+
+  try {
+    const db = await mongodbConnect();
+    const userModel = new User(db);
+
+    const user = await userModel.findUserById(id);
+    console.log("user", user);
+    if (!user) {
+      const error = new Error("user not found");
+      error.status = 404;
+      throw error;
+    }
+    const jwt_secret = process.env.JWT_SECRET;
+    const encod = jwt.verify(
+      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODgzOWJmNGFjZjVjMThlMDY2YjE2YTEiLCJlbWFpbCI6Im1pbHl0b2hnb2xkQGdtYWlsLmNvbSIsImlhdCI6MTc1MzQ1OTU3OCwiZXhwIjoxNzUzNDYwNzc4fQ.bzQk9WerwWoMSPInjrXMv-zTP5MONswXujVshfTU_9A 666mmm",
+      jwt_secret
+    );
+
+    const encryptedPassword = await bcrypt.hash(password, 12);
+
+    await userModel.updateUser({ password: encryptedPassword });
+
+    res.status(201).json({
+      success: true,
+      message: "password successfully updated, login with your new passwork",
+    });
+  } catch (err) {
+    if (err.name === "TokenExpiredError") {
+      err.message = "Token has expired";
+      err.status = 401;
+    } else if (err.name === "JsonWebTokenError") {
+      err.message = "Invalid token";
+      err.status = 401;
+    } else {
+      err.message = "Token verification failed";
+      err.status = 400;
+    }
+
     next(err);
   }
 };
