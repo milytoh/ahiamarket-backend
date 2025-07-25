@@ -14,8 +14,8 @@ const sendOtpEmail = async (email, otp) => {
     
     from: `"AhiaMarket" <${process.env.EMAIL_USER}>`,
     to: email,
-    subject: "Your OTP Verification Code",
-    html: `<p>Your OTP code is: <b>${otp}</b></p><p> please verify our Email to contnue, it will expire in 5 minutes.</p>`,
+    subject: "OTP Verification Code",
+    html: `<p>Your OTP code is: <b>${otp}</b></p><p> please verify your Email to contnue, code expires in 5 minutes.</p>`,
   };
 
   await transporter.sendMail(mailOptions);

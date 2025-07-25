@@ -1,6 +1,3 @@
-
-
-
 class User {
   constructor(db) {
     this.collection = db.collection("users");
@@ -23,6 +20,15 @@ class User {
 
   async findUserByEmail(email) {
     return await this.collection.findOne({ email: email });
+  }
+
+  async updateUser(userId, data) {
+    return await this.collection.updateOne(
+      { _id: userId },
+      {
+        $set: data
+      }
+    );
   }
 }
 

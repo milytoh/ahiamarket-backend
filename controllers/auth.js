@@ -104,7 +104,13 @@ exports.emailVerify = async (req, res, next) => {
       error.status = 400;
       throw error;
     }
-
+    const updateData = {
+      otp: null,
+      email_is_verified: true,
+      otpExpiresAt: null,
+      updated_at: Date.now(),
+    };
+    await userModel.updateUser(user._id, updateData);
 
     res.status(200).json({
       success: true,
@@ -136,6 +142,13 @@ exports.login = async (req, res, next) => {
       const error = new Error("incorrect password");
       error.status = 401;
       throw error;
+    }
+
+    //checking if email is verified befor allowing you to login
+    if (!user.email_is_verified) {
+      const err = new Error('please verify your email to continue');
+      err.status = 403;
+      throw err;
     }
 
     const jwt_secret = process.env.JWT_SECRET;
