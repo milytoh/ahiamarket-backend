@@ -36,7 +36,7 @@ router.post("/email/verify", authController.emailVerify);
 
 router.post("/request-password-reset", authController.requestPasswordReset);
 
-router.post("/resetPassword", authController.passwordReset);
+router.patch("/resetPassword", authController.passwordReset);
 
 //google auth
 router.get(

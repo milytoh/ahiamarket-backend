@@ -2,6 +2,8 @@ const bcrypt = require("bcrypt");
 
 require("dotenv").config();
 
+const mongodb = require('mongodb');
+
 const User = require("../models/user");
 const mongodbConnect = require("../models/db");
 const jwt = require("jsonwebtoken");
@@ -210,7 +212,7 @@ exports.requestPasswordReset = async (req, res, next) => {
       message: "check your email a password reset link has been sent to you!",
     });
   } catch (err) {
-    next(err);
+    next(err); 
   }
 };
 
@@ -227,47 +229,38 @@ exports.passwordReset = async (req, res, next) => {
     const db = await mongodbConnect();
     const userModel = new User(db);
 
-    const user = await userModel.findUserById(id);
-    console.log("user", user);
+    const userId = new mongodb.ObjectId(id)
+
+    const user = await userModel.findUserById(userId);
+
+    /// checking if user exist
     if (!user) {
       const error = new Error("user not found");
       error.status = 404;
       throw error;
     }
-    const jwt_secret = process.env.JWT_SECRET;
-    const encod = jwt.verify(
-      "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2ODgzOWJmNGFjZjVjMThlMDY2YjE2YTEiLCJlbWFpbCI6Im1pbHl0b2hnb2xkQGdtYWlsLmNvbSIsImlhdCI6MTc1MzQ1OTU3OCwiZXhwIjoxNzUzNDYwNzc4fQ.bzQk9WerwWoMSPInjrXMv-zTP5MONswXujVshfTU_9A 666mmm",
-      jwt_secret
-    );
+    
+    const encod = jwt.verify(token.trim(), process.env.JWT_SECRET);
 
     const encryptedPassword = await bcrypt.hash(password, 12);
 
-    await userModel.updateUser({ password: encryptedPassword });
+    await userModel.updateUser(user._id, { password: encryptedPassword });
 
     res.status(201).json({
       success: true,
       message: "password successfully updated, login with your new passwork",
     });
   } catch (err) {
-    if (err.name === "TokenExpiredError") {
-      err.message = "Token has expired";
-      err.status = 401;
-    } else if (err.name === "JsonWebTokenError") {
-      err.message = "Invalid token";
-      err.status = 401;
-    } else {
-      err.message = "Token verification failed";
-      err.status = 400;
-    }
+    
 
     next(err);
   }
-};
+}; 
 
 //authentication with google
 exports.googleAuth = async (req, res, next) => {
   const db = await mongodbConnect();
-  const userModel = new User(db);
+  const userModel = new User(db);  
 
   try {
     const token = req.user.token;
