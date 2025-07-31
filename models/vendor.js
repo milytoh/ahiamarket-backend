@@ -1,3 +1,5 @@
+
+
 class VendorApplications {
   constructor(db) {
     this.collection = db.collection("vendorApplication");
@@ -31,14 +33,15 @@ class VendorApplications {
   }
 }
 
-class Vendors {
+class Vendors extends VendorApplications  {
   constructor(db) {
-    this.collection = db.collection("Vendors");
+    super(db)
+    this.collection = db.collection("vendors");
   }
 
   async createVendor(vendorData) {
-    await this.collection.insertOne(vendorData)
+    return await this.collection.insertOne(vendorData);
   }
 }
 
-module.exports = VendorApplications;
+module.exports = { VendorApplications, Vendors  };

@@ -2,11 +2,16 @@ const { ObjectId } = require("mongodb");
 
 const mongodbConnect = require("../models/db");
 
-const VendorApplications = require("../models/vendor");
+const {Vendors, VendorApplications}  = require("../models/vendor");
 
 async function vendorApplication() {
   const db = await mongodbConnect();
   return new VendorApplications(db);
+}
+
+async function vendorfn() {
+  const db = await mongodbConnect();
+  return new Vendors(db);
 }
 
 // vendor approve
@@ -26,10 +31,18 @@ exports.vendorApprove = async (req, res, next) => {
       throw error;
     }
 
+    // updating vendor application as approved
     await vendorApplicationModel.updateVendorApplication(
       applicant._id,
       "approved"
     );
+
+    const approvedVendor =
+      await vendorApplicationModel.findbVendorApplicationById(applicant._id);
+
+    const vendorModel = await vendorfn();
+    //insert approved vendor into vendors collections
+    await vendorModel.createVendor(approvedVendor);
 
     res.status(200).json({
       success: true,

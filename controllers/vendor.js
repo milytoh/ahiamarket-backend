@@ -1,35 +1,42 @@
 const mongodbConnect = require("../models/db");
 
-const VendorApplications = require("../models/vendor");
-const User = require("../models/user");
+const { VendorApplications, Vendors } = require("../models/vendor");
 
 async function vendorApplication() {
   const db = await mongodbConnect();
   return new VendorApplications(db);
 }
 
-async function userModel() {
-  const db = await new mongodbConnect();
-  return new User(db);
+async function vendorfn() {
+  const db = await mongodbConnect();
+  return new Vendors(db);
 }
 
 exports.vendorApplication = async (req, res, next) => {
   const userId = req.user.userId;
   const storeName = req.body.storename;
   const bio = req.body.bio;
-  const address = req.body.address;
+  const address = req.body.address; 
 
   try {
-    const vendorModel = await vendorApplication();
-    const vendoruser = await vendorModel.findVendorByUserId(userId);
+    const vendorModel = await vendorfn();
+    const vendorApplicationModel = await vendorApplication();
 
-    console.log(vendoruser)
+    const vendoruser = await vendorApplicationModel.findVendorByUserId(userId);
 
-    // checking if applicant have already applied for a vendor 
+    // checking if applicant have already applied for a vendor
     if (vendoruser) {
       const error = new Error(
         "this user have already applied for a vendor, wait for confirmation"
       );
+      error.status = 409;
+      throw error;
+    }
+
+    //checking if a already vendor want to apply again
+    const vendor = await vendorModel.findVendorByUserId(userId);
+    if (vendor) {
+      const error = new Error("users is already a vendor");
       error.status = 409;
       throw error;
     }
@@ -59,7 +66,7 @@ exports.vendorApplication = async (req, res, next) => {
       updated_at: Date.now(),
     };
 
-    const vendor = await vendorModel.applyVendor(vendorData);
+    await vendorApplicationModel.applyVendor(vendorData);
 
     res.status(201).json({
       success: true,
