@@ -23,6 +23,8 @@ exports.vendorApplication = async (req, res, next) => {
     const vendorModel = await vendorApplication();
     const vendoruser = await vendorModel.findVendorByUserId(userId);
 
+    console.log(vendoruser)
+
     // checking if applicant have already applied for a vendor 
     if (vendoruser) {
       const error = new Error(

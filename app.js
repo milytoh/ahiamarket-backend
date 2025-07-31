@@ -10,6 +10,7 @@ require("./utils/passport");
 const authRoute = require("./routes/auth");
 const productsRoute = require("./routes/products");
 const vendorRoute = require('./routes/vendor');
+const adminRoute = require('./routes/admin');
 
 app.use(express.json());
 
@@ -29,6 +30,7 @@ app.use(passport.initialize());
 app.use("/account", authRoute);
 app.use(productsRoute);
 app.use(vendorRoute);
+app.use('/admin',adminRoute)
 
 //error meddleware
 app.use((error, req, res, nex) => {
