@@ -26,7 +26,7 @@ class User {
     return await this.collection.updateOne(
       { _id: userId },
       {
-        $set: data
+        $set: data,
       }
     );
   }

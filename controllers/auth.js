@@ -2,7 +2,7 @@ const bcrypt = require("bcrypt");
 
 require("dotenv").config();
 
-const mongodb = require('mongodb');
+const mongodb = require("mongodb");
 
 const User = require("../models/user");
 const mongodbConnect = require("../models/db");
@@ -163,7 +163,7 @@ exports.login = async (req, res, next) => {
       },
       jwt_secret,
       {
-        expiresIn: "1h",
+        expiresIn: "6h",
       }
     );
 
@@ -212,7 +212,7 @@ exports.requestPasswordReset = async (req, res, next) => {
       message: "check your email a password reset link has been sent to you!",
     });
   } catch (err) {
-    next(err); 
+    next(err);
   }
 };
 
@@ -229,7 +229,7 @@ exports.passwordReset = async (req, res, next) => {
     const db = await mongodbConnect();
     const userModel = new User(db);
 
-    const userId = new mongodb.ObjectId(id)
+    const userId = new mongodb.ObjectId(id);
 
     const user = await userModel.findUserById(userId);
 
@@ -239,7 +239,7 @@ exports.passwordReset = async (req, res, next) => {
       error.status = 404;
       throw error;
     }
-    
+
     const encod = jwt.verify(token.trim(), process.env.JWT_SECRET);
 
     const encryptedPassword = await bcrypt.hash(password, 12);
@@ -251,16 +251,14 @@ exports.passwordReset = async (req, res, next) => {
       message: "password successfully updated, login with your new passwork",
     });
   } catch (err) {
-    
-
     next(err);
   }
-}; 
+};
 
 //authentication with google
 exports.googleAuth = async (req, res, next) => {
   const db = await mongodbConnect();
-  const userModel = new User(db);  
+  const userModel = new User(db);
 
   try {
     const token = req.user.token;
@@ -308,5 +306,17 @@ exports.googleAuth = async (req, res, next) => {
     error.status(401);
 
     next(error);
+  }
+};
+
+exports.logout = (req, res, next) => {
+  try {
+    res.clearCookie("token");
+    res.status(200).json({
+      success: true,
+      message: "Logout successful",
+    });
+  } catch (err) {
+    next(err)
   }
 };
