@@ -2,7 +2,7 @@
 
 class VendorApplications {
   constructor(db) {
-    this.collection = db.collection("vendorApplication");
+    this.collection = db.collection("vendorApplications");
   }
 
   async applyVendor(vendorData) {

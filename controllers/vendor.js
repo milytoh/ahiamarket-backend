@@ -16,7 +16,9 @@ exports.vendorApplication = async (req, res, next) => {
   const userId = req.user.userId;
   const storeName = req.body.storename;
   const bio = req.body.bio;
-  const address = req.body.address; 
+  const address = req.body.address;
+  const state = req.body.state;
+  const city = req.body.country;
 
   try {
     const vendorModel = await vendorfn();
@@ -48,6 +50,12 @@ exports.vendorApplication = async (req, res, next) => {
       logo_url: null,
       address: address,
       followers: null,
+      location: {
+        city: city,
+        state: state,
+        country: "Nigeria",
+        // coordinates: { lat: 6.5244, lng: 3.3792 },
+      },
       stats: {
         total_sales: null,
         total_orders: null,
