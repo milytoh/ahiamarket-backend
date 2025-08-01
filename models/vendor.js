@@ -31,6 +31,10 @@ class VendorApplications {
       }
     );
   }
+
+  async deleteVendorApplicat(id) {
+    await this.collection.deleteOne({ _id: id });
+  }
 }
 
 class Vendors extends VendorApplications  {

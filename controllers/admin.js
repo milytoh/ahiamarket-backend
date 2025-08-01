@@ -44,6 +44,10 @@ exports.vendorApprove = async (req, res, next) => {
     //insert approved vendor into vendors collections
     await vendorModel.createVendor(approvedVendor);
 
+    //delete vendor from vendor application database
+   awaitw, vendorApplicationModel.deleteVendorApplicat(applicant._id)
+    
+
     res.status(200).json({
       success: true,
       message: "approved vendor application",
