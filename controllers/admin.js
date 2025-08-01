@@ -2,16 +2,16 @@ const { ObjectId } = require("mongodb");
 
 const mongodbConnect = require("../models/db");
 
-const {Vendors, VendorApplications}  = require("../models/vendor");
+const {Vendor, VendorApplication}  = require("../models/vendor");
 
 async function vendorApplication() {
   const db = await mongodbConnect();
-  return new VendorApplications(db);
+  return new VendorApplication(db);
 }
 
 async function vendorfn() {
   const db = await mongodbConnect();
-  return new Vendors(db);
+  return new Vendor(db);
 }
 
 // vendor approve

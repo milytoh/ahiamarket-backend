@@ -9,7 +9,7 @@ require("./utils/passport");
 
 const authRoute = require("./routes/auth");
 const productsRoute = require("./routes/products");
-const vendorRoute = require('./routes/vendor');
+const vendorRoute = require('./routes/vendors');
 const adminRoute = require('./routes/admin');
 
 app.use(express.json());

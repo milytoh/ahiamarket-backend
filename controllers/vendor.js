@@ -1,15 +1,15 @@
 const mongodbConnect = require("../models/db");
 
-const { VendorApplications, Vendors } = require("../models/vendor");
+const { VendorApplication, Vendor } = require("../models/vendor");
 
 async function vendorApplication() {
   const db = await mongodbConnect();
-  return new VendorApplications(db);
+  return new VendorApplication(db);
 }
 
 async function vendorfn() {
   const db = await mongodbConnect();
-  return new Vendors(db);
+  return new Vendor(db);
 }
 
 exports.vendorApplication = async (req, res, next) => {

@@ -1,6 +1,6 @@
 
 
-class VendorApplications {
+class VendorApplication {
   constructor(db) {
     this.collection = db.collection("vendorApplications");
   }
@@ -37,7 +37,7 @@ class VendorApplications {
   }
 }
 
-class Vendors extends VendorApplications  {
+class Vendor extends VendorApplication  {
   constructor(db) {
     super(db)
     this.collection = db.collection("vendors");
@@ -48,4 +48,4 @@ class Vendors extends VendorApplications  {
   }
 }
 
-module.exports = { VendorApplications, Vendors  };
+module.exports = { VendorApplication, Vendor  };
