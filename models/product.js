@@ -1,12 +1,19 @@
 class Product {
-    constructor(db) {
-        this.collection = db.collection('products')
-    }
+  constructor(db) {
+    this.collection = db.collection("products");
+  }
 
-    async createProduct(productData) {
-        return  await this.collection.insertOne(productData);
+  async findAllProducts() {
+    return this.collection.find({}).toArray();
+  }
+
+  async findProductById(id) {
+    return this.collection.findOne({ _id: id });
+    }
+    
+    async deleteProductById(id) {
+      return  await this.collection.deleteOne({_id:id})
     }
 }
 
-
-module.exports = Product
+module.exports = Product;
