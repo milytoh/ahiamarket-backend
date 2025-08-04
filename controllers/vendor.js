@@ -1,6 +1,7 @@
 const mongodbConnect = require("../models/db");
 
 const { VendorApplication, Vendor } = require("../models/vendor");
+const Product = require("../models/product");
 
 async function vendorApplication() {
   const db = await mongodbConnect();
@@ -12,6 +13,12 @@ async function vendorfn() {
   return new Vendor(db);
 }
 
+async function productfn() {
+  const db = await mongodbConnect();
+  return new Product(db);
+}
+
+// vendor application
 exports.vendorApplication = async (req, res, next) => {
   const userId = req.user.userId;
   const storeName = req.body.storename;
@@ -79,6 +86,62 @@ exports.vendorApplication = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: "vendor request submited",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// vendor creating a product
+exports.createProduct = async (req, res, next) => {
+  const userId = req.user.userId;
+  const { name, description, price, condition, category, stock, tags } =
+    req.body;
+
+  const formattedPrice = parseFloat(parseFloat(price).toFixed(2));
+ 
+  const formattedstock = parseInt(stock); 
+
+  try {
+    const vendorModel = await vendorfn();
+    const productModel = await productfn();
+
+    // to check if a users is a vendor before creating a product
+    const vendor = await vendorModel.findVendorByUserId(userId);
+    if (!vendor) {
+      const error = new Error(
+        "this user is not a vendor, apply for a vendor to start selling products"
+      );
+
+      error.status = 404;
+      throw error;
+    }
+
+    const productData = {
+      vendorId: vendor._id,
+      name: name,
+      description: description,
+      price: formattedPrice,
+      currency: "NGN",
+      category: category,
+      condition: condition,
+      images: null, //[String], // URLs
+      stock: formattedstock,
+      status: "active",
+      tags: tags,
+      rating: {
+        average: null,
+        count: null,
+      },
+      created_at: Date.now(),
+      updated_at: Date.now(),
+    };
+
+    const product = await productModel.createProduct(productData);
+
+    res.status(201).json({
+      success: true,
+      message: "product created successful",
     });
   } catch (error) {
     next(error);

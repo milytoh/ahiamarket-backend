@@ -43,9 +43,6 @@ class Vendor extends VendorApplication  {
     this.collection = db.collection("vendors");
   }
 
-  async createVendor(vendorData) {
-    return await this.collection.insertOne(vendorData);
-  }
 }
 
 module.exports = { VendorApplication, Vendor  };

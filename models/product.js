@@ -1,4 +1,4 @@
-class Produc {
+class Product {
     constructor(db) {
         this.collection = db.collection('products')
     }
@@ -7,3 +7,6 @@ class Produc {
         return  await this.collection.insertOne(productData);
     }
 }
+
+
+module.exports = Product
