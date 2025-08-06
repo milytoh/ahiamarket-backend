@@ -4,11 +4,11 @@ class Product {
   }
 
   async findAllProducts() {
-    return this.collection.find({}).toArray();
+    return await this.collection.find({}).toArray();
   }
 
   async findProductById(id) {
-    return this.collection.findOne({ _id: id });
+    return await this.collection.findOne({ _id: id });
   }
 
   async deleteProductById(id) {
@@ -16,7 +16,7 @@ class Product {
   }
 
   async updateProduct(productId, vendorId, updatedProductData) {
-  return  this.collection.updateOne(
+  return await this.collection.updateOne(
       {
         $and: [{ _id: productId }, { vendorId: vendorId }],
       },
