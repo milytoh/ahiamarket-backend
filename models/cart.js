@@ -47,6 +47,11 @@ class Cart {
       }
     );
   }
+
+  async deleteCartByUserId(userId) {
+    await this.collection.deleteOne({userId: userId})
+  } 
+
 }
 
 module.exports = Cart;

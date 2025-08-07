@@ -174,12 +174,36 @@ exports.deleteCartItem = async (req, res, next) => {
       (item) => item.productId.toString() !== itemId
     );
 
+    // updating cart items with the availaible items
     await cartModel.deleteCartItem(userId, cartItems);
 
     res.status(200).json({
       success: true,
-      message: "cart item deleted"
-    })
+      message: "cart item deleted",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteCart = async (req, res, next) => {
+  const userId = new ObjectId(req.user.userId);
+  try {
+    const cartModel = await carttfn();
+    const cart = await cartModel.findCartByUserId(userId);
+    //checking if login user have cart already
+    if (!cart) {
+      const error = new Error("no cart found");
+      error.status = 404;
+      throw error;
+    }
+
+    await cartModel.deleteCartByUserId(cart.userId);
+
+    res.status(200).json({
+      success: true,
+      message: "cart deleted successful",
+    });
   } catch (error) {
     next(error);
   }
