@@ -23,10 +23,8 @@ exports.addToCart = async (req, res, next) => {
     const productModel = await producttfn();
 
     // checking for a product and getting it latest price
-    const prodId = new ObjectId(productId)
+    const prodId = new ObjectId(productId);
     const product = await productModel.findProductById(prodId);
-
-    console.log(product);
 
     if (!product) {
       const error = new Error("product not found");
@@ -37,6 +35,7 @@ exports.addToCart = async (req, res, next) => {
     const cart = await cartModel.findCartByUserId(userId);
     const priceAtTime = product.price;
 
+    // checkin if no cart exist for a user, create new cart
     if (!cart) {
       cartData = {
         userId,
@@ -55,6 +54,7 @@ exports.addToCart = async (req, res, next) => {
 
       await cartModel.insertCart(cartData);
     } else {
+      // if a user has a cart item already, and alse if the product already in items array, get the index
       const existingItemIndex = cart.items.findIndex((item) => {
         return item.productId.toString() === productId;
       });
@@ -76,8 +76,7 @@ exports.addToCart = async (req, res, next) => {
     }
 
     const displayCart = await cartModel.findCartByUserId(userId);
-
-    res.status(200).json({
+    res.status(201).json({
       success: true,
       message: "product added to cart successful",
       cartItem: displayCart,
@@ -85,6 +84,73 @@ exports.addToCart = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
+};
 
-  // carts
+// to get all cart
+exports.getCart = async (req, res, next) => {
+  const userId = new ObjectId(req.user.userId);
+
+  try {
+    const cartModel = await carttfn();
+    const cartItems = await cartModel.findCartByUserId(userId);
+
+    if (!cartItems) {
+      const error = new Error("no cart found");
+      error.status = 404;
+      throw error;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "cart items",
+      cart: cartItems,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//	Update quantity
+exports.updateCartItem = async (req, res, next) => {
+  // cart item id
+  const itemId = req.params.itemId;
+  const flag = req.body.flag;
+
+  const userId = new ObjectId(req.user.userId);
+
+  try {
+    const cartModel = await carttfn();
+    const cart = await cartModel.findCartByUserId(userId);
+    //checking if login user have cart already
+    if (!cart) {
+      const error = new Error("no cart found");
+      error.status = 404;
+      throw error;
+    }
+    //finding the index of the cart to update
+    const existingItemIndex = cart.items.findIndex((item) => {
+      return item.productId.toString() === itemId;
+    });
+
+    //to increment the quantity
+    if (existingItemIndex >= 0 && flag === "increment") {
+      const itemKey = `items.${existingItemIndex}.quantity`;
+
+      await cartModel.updateCartByUserId(userId, itemKey, 1);
+    }
+
+    // to decrement the quantity
+    if (existingItemIndex >= 0 && flag === "decrement") {
+      const itemKey = `items.${existingItemIndex}.quantity`;
+
+      await cartModel.updateCartByUserId(userId, itemKey, -1);
+    }
+
+    res.status(201).json({
+      success: true,
+      message: "cart item updated"
+    });
+  } catch (error) {
+    next(error);
+  }
 };
