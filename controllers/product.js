@@ -1,8 +1,8 @@
+const { ObjectId } = require("mongodb");
+
 const mongodbConnect = require("../models/db");
 const Product = require("../models/product");
 const { Vendor } = require("../models/vendor");
-
-const { ObjectId } = require("mongodb");
 
 async function productfn() {
   const db = await mongodbConnect();
@@ -123,7 +123,7 @@ exports.getUpdateProduct = async (req, res, next) => {
       product,
     });
   } catch (error) {
-    next(error)
+    next(error);
   }
 };
 
@@ -156,8 +156,6 @@ exports.updateProduct = async (req, res, next) => {
       throw error;
     }
 
-
-
     const updateProductData = {
       vendorId: vendor._id,
       name: name,
@@ -178,7 +176,7 @@ exports.updateProduct = async (req, res, next) => {
       updated_at: Date.now(),
     };
 
-    await productModel.updateProduct(productId, vendor._id, updateProductData)
+    await productModel.updateProduct(productId, vendor._id, updateProductData);
 
     res.status(201).json({
       success: true,
