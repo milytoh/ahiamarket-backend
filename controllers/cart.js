@@ -61,7 +61,7 @@ exports.addToCart = async (req, res, next) => {
 
       if (existingItemIndex >= 0) {
         const itemKey = `items.${existingItemIndex}.quantity`;
-        await cartModel.updateCartByUserId(userId, itemKey, quantity);
+        await cartModel.updateCartQuantity(userId, itemKey, quantity);
       } else {
         // Product not in cart → push new item
         const item = {
@@ -136,20 +136,50 @@ exports.updateCartItem = async (req, res, next) => {
     if (existingItemIndex >= 0 && flag === "increment") {
       const itemKey = `items.${existingItemIndex}.quantity`;
 
-      await cartModel.updateCartByUserId(userId, itemKey, 1);
+      await cartModel.updateCartQuantity(userId, itemKey, 1);
     }
 
     // to decrement the quantity
     if (existingItemIndex >= 0 && flag === "decrement") {
       const itemKey = `items.${existingItemIndex}.quantity`;
 
-      await cartModel.updateCartByUserId(userId, itemKey, -1);
+      await cartModel.updateCartQuantity(userId, itemKey, -1);
     }
 
     res.status(201).json({
       success: true,
-      message: "cart item updated"
+      message: "cart item updated",
     });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.deleteCartItem = async (req, res, next) => {
+  const itemId = req.params.itemId;
+
+  const userId = new ObjectId(req.user.userId);
+
+  try {
+    const cartModel = await carttfn();
+    const cart = await cartModel.findCartByUserId(userId);
+    //checking if login user have cart already
+    if (!cart) {
+      const error = new Error("no cart found");
+      error.status = 404;
+      throw error;
+    }
+
+    const cartItems = cart.items.filter(
+      (item) => item.productId.toString() !== itemId
+    );
+
+    await cartModel.deleteCartItem(userId, cartItems);
+
+    res.status(200).json({
+      success: true,
+      message: "cart item deleted"
+    })
   } catch (error) {
     next(error);
   }

@@ -13,7 +13,7 @@ class Cart {
     return await this.collection.insertOne(cartData);
   }
 
-  async updateCartByUserId(userId, itemKey, quantity) {
+  async updateCartQuantity(userId, itemKey, quantity) {
     await this.collection.updateOne(
       { userId: userId },
       {
@@ -24,13 +24,26 @@ class Cart {
   }
 
   async pushToCart(userId, item) {
-    await this.collection.updateOne(
+    return await this.collection.updateOne(
       { userId: userId },
       {
         $push: {
           items: item,
         },
         $set: { updatedAt: new Date() },
+      }
+    );
+  }
+
+  async deleteCartItem(userId, items) {
+    return await this.collection.updateOne(
+      {
+        userId: userId,
+      },
+      {
+        $set: {
+          items: items,
+        },
       }
     );
   }

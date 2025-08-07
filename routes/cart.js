@@ -7,6 +7,6 @@ const { isAuth } = require("../middlewares/auth");
 router.post("/cart/items", isAuth, cartController.addToCart);
 router.get("/cart", isAuth, cartController.getCart);
 router.patch("/cart/items/:itemId", isAuth, cartController.updateCartItem);
-router.delete("/cart/items/:itemId", isAuth);
+router.delete("/cart/items/:itemId", isAuth, cartController.deleteCartItem);
 
 module.exports = router;
