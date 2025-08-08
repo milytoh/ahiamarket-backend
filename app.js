@@ -30,12 +30,12 @@ app.use((req, res, next) => {
 
 app.use(passport.initialize());
 
-app.use("/account", authRoute);
-app.use(productsRoute);
-app.use(vendorRoute);
-app.use('/admin', adminRoute);
-app.use(orderRoute);
-app.use(cartRoute);
+app.use("api//account", authRoute);
+app.use("/api",productsRoute);
+app.use("/api",vendorRoute);
+app.use('/api/admin', adminRoute);
+app.use("/api",orderRoute);
+app.use("/api",cartRoute);
 
 //error meddleware
 app.use((error, req, res, nex) => {

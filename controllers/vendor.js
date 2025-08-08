@@ -1,5 +1,7 @@
 const mongodbConnect = require("../models/db");
 
+const { validationResult } = require("express-validator");
+
 const { VendorApplication, Vendor } = require("../models/vendor");
 const Product = require("../models/product");
 
@@ -28,6 +30,21 @@ exports.vendorApplication = async (req, res, next) => {
   const city = req.body.country;
 
   try {
+   
+    const result = validationResult(req);
+
+    //checking if any field is invalid
+    if (!result.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid inputs",
+        error: result.array().map((err) => ({
+          field: err.path,
+          errMessage: err.msg,
+        })),
+      });
+    }
+
     const vendorModel = await vendorfn();
     const vendorApplicationModel = await vendorApplication();
 
@@ -99,8 +116,8 @@ exports.createProduct = async (req, res, next) => {
     req.body;
 
   const formattedPrice = parseFloat(parseFloat(price).toFixed(2));
- 
-  const formattedstock = parseInt(stock); 
+
+  const formattedstock = parseInt(stock);
 
   try {
     const vendorModel = await vendorfn();
