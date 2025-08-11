@@ -16,7 +16,7 @@ class Product {
   }
 
   async updateProduct(productId, vendorId, updatedProductData) {
-  return await this.collection.updateOne(
+    return await this.collection.updateOne(
       {
         $and: [{ _id: productId }, { vendorId: vendorId }],
       },
@@ -24,6 +24,14 @@ class Product {
         $set: updatedProductData,
       }
     );
+  }
+
+  async findAllById(id) {
+    return await this.collection
+      .find({
+        _id: { $in: [...id] },
+      })
+      .toArray();
   }
 }
 

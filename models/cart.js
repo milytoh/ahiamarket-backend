@@ -1,8 +1,6 @@
-
-
 class Cart {
   constructor(db) {
-    this.collection = db.collection("cart");
+    this.collection = db.collection("carts");
   }
 
   async findCartByUserId(useId) {
@@ -35,6 +33,15 @@ class Cart {
     );
   }
 
+  async updateCart(userId, item) {
+    await this.collection.upadeOne(
+      { _id: userId },
+      {
+        $set: { items: item, updatedAt: new Date() },
+      }
+    );
+  }
+
   async deleteCartItem(userId, items) {
     return await this.collection.updateOne(
       {
@@ -49,9 +56,8 @@ class Cart {
   }
 
   async deleteCartByUserId(userId) {
-    await this.collection.deleteOne({userId: userId})
-  } 
-
+    await this.collection.deleteOne({ userId: userId });
+  }
 }
 
 module.exports = Cart;

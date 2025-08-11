@@ -5,12 +5,12 @@ const Cart = require("../models/cart");
 const Product = require("../models/product");
 
 async function carttfn() {
-  const db = await mongodbConnect();
+   const { db } = await mongodbConnect();
   return new Cart(db);
 }
 
 async function producttfn() {
-  const db = await mongodbConnect();
+  const { db } = await mongodbConnect();
   return new Product(db);
 }
 

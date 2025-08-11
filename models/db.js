@@ -11,7 +11,7 @@ let db;
 
 const mongodbConnect = async () => {
   try {
-    if (db) return db;
+     if (db && client) return { db, client };
     client = new MongoClient(uri);
 
     await client.connect();
@@ -28,7 +28,7 @@ const mongodbConnect = async () => {
       process.exit(0);
     });
 
-    return db;
+    return {db, client};
   } catch (err) {
       console.error(" MongoDB connection error:", err);
       throw err;

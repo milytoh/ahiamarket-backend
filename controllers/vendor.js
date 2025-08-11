@@ -6,17 +6,17 @@ const { VendorApplication, Vendor } = require("../models/vendor");
 const Product = require("../models/product");
 
 async function vendorApplication() {
-  const db = await mongodbConnect();
+  const { db } = await mongodbConnect();
   return new VendorApplication(db);
 }
 
 async function vendorfn() {
-  const db = await mongodbConnect();
+   const { db } = await mongodbConnect();
   return new Vendor(db);
 }
 
 async function productfn() {
-  const db = await mongodbConnect();
+   const { db } = await mongodbConnect();
   return new Product(db);
 }
 

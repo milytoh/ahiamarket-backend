@@ -5,12 +5,12 @@ const mongodbConnect = require("../models/db");
 const {Vendor, VendorApplication}  = require("../models/vendor");
 
 async function vendorApplication() {
-  const db = await mongodbConnect();
+   const { db } = await mongodbConnect();
   return new VendorApplication(db);
 }
 
 async function vendorfn() {
-  const db = await mongodbConnect();
+   const { db } = await mongodbConnect();
   return new Vendor(db);
 }
 

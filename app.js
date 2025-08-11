@@ -10,10 +10,10 @@ require("./utils/passport");
 // routes inport
 const authRoute = require("./routes/auth");
 const productsRoute = require("./routes/products");
-const vendorRoute = require('./routes/vendors');
-const adminRoute = require('./routes/admin');
+const vendorRoute = require("./routes/vendors");
+const adminRoute = require("./routes/admin");
 const orderRoute = require("./routes/order");
-const cartRoute = require("./routes/cart")
+const cartRoute = require("./routes/cart");
 
 app.use(express.json());
 
@@ -30,12 +30,12 @@ app.use((req, res, next) => {
 
 app.use(passport.initialize());
 
-app.use("api//account", authRoute);
-app.use("/api",productsRoute);
-app.use("/api",vendorRoute);
-app.use('/api/admin', adminRoute);
-app.use("/api",orderRoute);
-app.use("/api",cartRoute);
+app.use("/api/account", authRoute);
+app.use("/api", productsRoute);
+app.use("/api", vendorRoute);
+app.use("/api/admin", adminRoute);
+app.use("/api", orderRoute);
+app.use("/api", cartRoute);
 
 //error meddleware
 app.use((error, req, res, nex) => {
@@ -58,4 +58,3 @@ app.listen(PORT, (err) => {
   }
   console.log(`server is runing at port ${PORT}`);
 });
- 

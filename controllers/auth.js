@@ -29,7 +29,7 @@ exports.signup = async (req, res, next) => {
   }
 
   try {
-    const db = await mongodbConnect();
+     const { db } = await mongodbConnect();;
     const userModel = new User(db);
 
     const userEmail = await userModel.findUserByEmail(email);

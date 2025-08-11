@@ -5,12 +5,12 @@ const Product = require("../models/product");
 const { Vendor } = require("../models/vendor");
 
 async function productfn() {
-  const db = await mongodbConnect();
+   const { db } = await mongodbConnect();
   return new Product(db);
 }
 
 async function vendorfn() {
-  const db = await mongodbConnect();
+   const { db } = await mongodbConnect();
   return new Vendor(db);
 }
 
