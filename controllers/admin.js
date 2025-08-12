@@ -45,7 +45,7 @@ exports.vendorApprove = async (req, res, next) => {
     await vendorModel.createVendor(approvedVendor);
 
     //delete vendor from vendor application database
-   awaitw, vendorApplicationModel.deleteVendorApplicat(applicant._id)
+   await vendorApplicationModel.deleteVendorApplicat(applicant._id)
     
 
     res.status(200).json({

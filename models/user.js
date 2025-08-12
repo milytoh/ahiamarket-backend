@@ -30,6 +30,12 @@ class User {
       }
     );
   }
+
+  async updateUserByEmail(email, updateData) {
+    await this.collection.updateOne({ email: email }, {
+      $set: updateData
+    })
+  }
 }
 
 module.exports = User;

@@ -111,6 +111,7 @@ exports.vendorApplication = async (req, res, next) => {
 
 // vendor creating a product
 exports.createProduct = async (req, res, next) => {
+  const result = validationResult(req);
   const userId = req.user.userId;
   const { name, description, price, condition, category, stock, tags } =
     req.body;
@@ -118,6 +119,18 @@ exports.createProduct = async (req, res, next) => {
   const formattedPrice = parseFloat(parseFloat(price).toFixed(2));
 
   const formattedstock = parseInt(stock);
+
+  //checking if any field is invalid
+  if (!result.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid inputs",
+      error: result.array().map((err) => ({
+        field: err.path,
+        errMessage: err.msg,
+      })),
+    });
+  }
 
   try {
     const vendorModel = await vendorfn();

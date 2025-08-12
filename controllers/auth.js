@@ -29,7 +29,7 @@ exports.signup = async (req, res, next) => {
   }
 
   try {
-     const { db } = await mongodbConnect();;
+    const { db } = await mongodbConnect();
     const userModel = new User(db);
 
     const userEmail = await userModel.findUserByEmail(email);
@@ -86,12 +86,55 @@ exports.signup = async (req, res, next) => {
   }
 };
 
+exports.otpRequest = async (req, res, next) => {
+  const email = req.body.email;
+
+  try {
+    const { db } = await mongodbConnect();
+    const userModel = new User(db);
+
+    const user = await userModel.findUserByEmail(email);
+    // checking if user with the email exist
+    if (!user) {
+      const error = new Error("user with this email does not exist");
+      error.status = 404;
+      throw error;
+    }
+
+    if (user.email_is_verified) {
+      const error = new Error("user with this email already verified");
+      error.status = 409;
+      throw error;
+    }
+
+    //generating Otp
+    const otp = generateOtp();
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    const updateData = {
+      otp: otp,
+      otpExpiresAt: otpExpiresAt,
+    };
+
+    await userModel.updateUserByEmail(user.email, updateData);
+
+    await sendOtpEmail(email, otp);
+
+    res.status(200).json({
+      success: true,
+      message: "opt sent to our email, please verifyy your email address",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 //email verification
 exports.emailVerify = async (req, res, next) => {
   const { email, otp } = req.body;
 
   try {
-    const db = await mongodbConnect();
+    const { db } = await mongodbConnect();
     const userModel = new User(db);
 
     const user = await userModel.findUserByEmail(email);
@@ -128,7 +171,7 @@ exports.emailVerify = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
   try {
-    const db = await mongodbConnect();
+    const { db } = await mongodbConnect();
     const userModel = new User(db);
 
     const user = await userModel.findUserByEmail(email);
@@ -182,7 +225,7 @@ exports.requestPasswordReset = async (req, res, next) => {
   const email = req.body.email;
 
   try {
-    const db = await mongodbConnect();
+    const { db } = await mongodbConnect();
     const userModel = new User(db);
 
     const user = await userModel.findUserByEmail(email);
@@ -226,7 +269,7 @@ exports.passwordReset = async (req, res, next) => {
   console.log(id, token, password);
 
   try {
-    const db = await mongodbConnect();
+    const { db } = await mongodbConnect();
     const userModel = new User(db);
 
     const userId = new mongodb.ObjectId(id);
@@ -257,7 +300,7 @@ exports.passwordReset = async (req, res, next) => {
 
 //authentication with google
 exports.googleAuth = async (req, res, next) => {
-  const db = await mongodbConnect();
+  const { db } = await mongodbConnect();
   const userModel = new User(db);
 
   try {
@@ -317,6 +360,8 @@ exports.logout = (req, res, next) => {
       message: "Logout successful",
     });
   } catch (err) {
-    next(err)
+    next(err);
   }
 };
+
+// "C:\Program Files\MongoDB\Server\6.0\bin\mongod.exe" --dbpath "C:\data\db" --replSet rs0
