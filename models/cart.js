@@ -34,7 +34,7 @@ class Cart {
   }
 
   async updateCart(userId, item) {
-    await this.collection.upadeOne(
+    await this.collection.updateOne(
       { _id: userId },
       {
         $set: { items: item, updatedAt: new Date() },

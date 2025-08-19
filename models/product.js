@@ -3,6 +3,10 @@ class Product {
     this.collection = db.collection("products");
   }
 
+  async createProduct(productData) {
+    await this.collection.insertOne(productData)
+  }
+
   async findAllProducts() {
     return await this.collection.find({}).toArray();
   }

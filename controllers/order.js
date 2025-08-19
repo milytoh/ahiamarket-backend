@@ -11,11 +11,6 @@ async function productfn() {
   return new Product(db);
 }
 
-async function vendorfn() {
-  const { db } = await mongodbConnect();
-  return new Vendor(db);
-}
-
 async function cartfn() {
   const { db } = await mongodbConnect();
   return new Cart(db);
@@ -130,6 +125,7 @@ exports.order = async (req, res, next) => {
     }
 
     const vendorMap = groupItemsByVendor(cart.items);
+    console.log(vendorMap);
 
     let parentTotal = 0;
     const vendorOrdersRefs = []; // to build vendor_orders array for parent doc
@@ -157,7 +153,7 @@ exports.order = async (req, res, next) => {
 
     const parentOrderId = parentOrder.insertedId;
 
-    //  For each vendor group create a child order
+/////////////    //  For each vendor group create a child order
     for (const [vendorIdStr, items] of vendorMap.entries()) {
       const vendorId = new ObjectId(vendorIdStr);
       const childProducts = [];
@@ -220,17 +216,7 @@ exports.order = async (req, res, next) => {
     }
 
     //Update parent with vendor_orders and total
-    await parentOrders.updateOne(
-      { _id: parentOrderId },
-      {
-        $set: {
-          vendor_orders: vendorOrdersRefs,
-          total: parentTotal,
-          updated_at: new Date(),
-        },
-      },
-      { session }
-    );
+
     await parentodersModel.updateParentOrder(
       parentOrderId,
       vendorOrdersRefs,
@@ -250,11 +236,11 @@ exports.order = async (req, res, next) => {
     session.endSession();
 
     return res.status(201).json({
-        success: true,
-        message: "Checkout successful (orders created). Proceed to payment.",
-               vendor_orders: vendorOrdersRefs,
-        total: parentTotal,
-      });
+      success: true,
+      message: "Checkout successful (orders created). Proceed to payment.",
+      vendor_orders: vendorOrdersRefs,
+      total: parentTotal,
+    });
   } catch (error) {
     //  await session.abortTransaction();
     //  session.endSession();
