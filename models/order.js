@@ -7,6 +7,10 @@ class ParentOrders {
     return await this.collection.insertOne(parentOder, { session });
   }
 
+  async findParentOrderById(id) {
+    return await this.collection.findOne({ _id: id });
+  }
+
   async updateParentOrder(
     parentOrderId,
     vendorOrdersRefs,
@@ -23,6 +27,19 @@ class ParentOrders {
         },
       },
       { session }
+    );
+  }
+
+  async updateParentOrderById(id, data, reference) {
+    await this.collection.updateOne(
+      { _id: id },
+      {
+        $set: {
+          "payment.status": data,
+          "payment.transaction_ref": reference,
+          updated_at: new Date()
+        },
+      }
     );
   }
 }
