@@ -31,7 +31,7 @@ class ParentOrders {
   }
 
   async updateParentOrderById(id, data, reference) {
-    await this.collection.updateOne(
+  return  await this.collection.updateOne(
       { _id: id },
       {
         $set: {

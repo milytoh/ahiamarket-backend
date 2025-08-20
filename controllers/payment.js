@@ -6,8 +6,7 @@ const crypto = require("crypto");
 
 const { Orders, ParentOrders } = require("../models/order");
 const User = require("../models/user");
-const Payment = require("../models/payment")
-
+const Payment = require("../models/payment");
 
 const mongodbConnect = require("../models/db");
 const { error } = require("console");
@@ -90,7 +89,7 @@ exports.directPayment = async (req, res, next) => {
 exports.paymentCallback = async (req, res, next) => {
   const reference = req.query.reference;
 
-    try {
+  try {
     //  Verify payment with Paystack
     const verifyResp = await axios.get(
       `https://api.paystack.co/transaction/verify/${reference}`,
@@ -103,7 +102,6 @@ exports.paymentCallback = async (req, res, next) => {
 
     const data = verifyResp.data.data; // Paystack returns transaction details
 
-    
     if (data.status !== "success") {
       const error = new Error("payment faild");
       error.status = 400;
@@ -113,12 +111,13 @@ exports.paymentCallback = async (req, res, next) => {
     const parentOrderModel = await parentOrderfn();
     const paymentModel = await paymentfn();
 
-    const pupdate = await parentOrderModel.findParentOrderById(
+    
+    const pupdate = await parentOrderModel.updateParentOrder(
       data.metadata.parent_order_id,
       "paid"
     );
 
-    console.log(pupdate, "uuuuuu");
+   
 
     //  Create payment record
     const paymenData = await paymentModel.createPayment({
@@ -133,7 +132,7 @@ exports.paymentCallback = async (req, res, next) => {
       customerEmail: data.customer.email,
     });
 
-    console.log(paymenData, "pppp");
+    
   } catch (error) {
     next(error);
   }
@@ -155,7 +154,6 @@ exports.paymentVerify = async (req, res, next) => {
 
     const data = verifyResp.data.data; // Paystack returns transaction details
 
-   
     if (data.status !== "success") {
       const error = new Error("payment faild");
       error.status = 400;
@@ -163,11 +161,12 @@ exports.paymentVerify = async (req, res, next) => {
     }
 
     const parentOrderModel = await parentOrderfn();
-    const paymentModel = await Paymentsfn();
+    const paymentModel = await paymentfn();
 
-    const pupdate = await parentOrderModel.findParentOrderById(
-      data.metadata.parent_order_id,
-      "paid"
+    const pupdate = await parentOrderModel.updateParentOrderById(
+      new ObjectId(data.metadata.parent_order_id),
+      "paid",
+      reference
     );
 
     console.log(pupdate, "uuuuuu");
