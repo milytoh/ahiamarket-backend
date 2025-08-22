@@ -28,6 +28,7 @@ async function orderfn() {
 
 exports.order = async (req, res, next) => {
   const userId = new ObjectId(req.user.userId);
+ 
   //   const paymentMethod = req.body.payment_method || "direct";
 
   const productModel = await productfn();
@@ -44,14 +45,14 @@ exports.order = async (req, res, next) => {
       throw error;
     }
 
-    //  Fetch product documents in bulk
+    //  Fetch product documents in bulk 
     const productIds = [
       ...new Set(cart.items.map((id) => id.productId.toString())),
     ].map((id) => new ObjectId(id));
-
+ 
     const orderProducts = await productModel.findAllById(productIds);
 
-    const productMap = new Map(orderProducts.map((p) => [p._id.toString(), p]));
+    const productMap = new Map(orderProducts.map((p) => [p._id.toString(),  p]));
 
     //  Compare prices & check stock -> collect any differences
     const priceChanges = [];
@@ -224,9 +225,7 @@ exports.order = async (req, res, next) => {
       session
     );
 
-    // 5d) Optionally: record a transaction_ref or prepare payment
-    // For Paystack: create transaction using parentTotal, return authorization_url to client
-    // For this example we leave transaction_ref null and payment.status pending
+
 
     // 5e) Clear user's cart (or remove the items that were checked out)
     await cartModel.updateCart(userId, []);

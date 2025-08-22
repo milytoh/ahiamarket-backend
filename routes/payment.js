@@ -10,6 +10,10 @@ router.post(
   paymentController.directPayment
 );
 router.get("/paystack/callback", paymentController.paymentCallback);
-router.post("/payment/verify/:reference", paymentController.paymentVerify);
+
+
+//to be activate on live server
+// will be called by paystack
+router.post("/paystack/webhook", paymentController.webhooks)
 
 module.exports = router;

@@ -7,8 +7,10 @@ class Product {
     await this.collection.insertOne(productData)
   }
 
-  async findAllProducts() {
-    return await this.collection.find({}).toArray();
+  async findAllProducts(idArray) {
+    return await this.collection.find({
+      _id: {$in: [idArray]}
+    }).toArray();
   }
 
   async findProductById(id) {

@@ -30,14 +30,15 @@ class ParentOrders {
     );
   }
 
-  async updateParentOrderById(id, data, reference) {
-  return  await this.collection.updateOne(
+  async updateParentOrderById(id, data, reference, orderStatus) {
+    return await this.collection.updateOne(
       { _id: id },
       {
         $set: {
           "payment.status": data,
           "payment.transaction_ref": reference,
-          updated_at: new Date()
+          order_status: orderStatus,
+          updated_at: new Date(),
         },
       }
     );
@@ -51,6 +52,20 @@ class Orders {
 
   async createOrder(orderData, session) {
     return await this.collection.insertOne(orderData, { session });
+  }
+
+  async updateManyByParantOrderId(id,data,reference, orderStatus) {
+    await this.collection.updateMany(
+      { parent_order_id: id },
+      {
+        $set: {
+          "payment.status": data,
+          "payment.transaction_ref": reference,
+          order_status: orderStatus,
+          updated_at: new Date(),
+        },
+      }
+    );
   }
 }
 
