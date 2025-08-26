@@ -28,13 +28,15 @@ async function orderfn() {
 
 exports.order = async (req, res, next) => {
   const userId = new ObjectId(req.user.userId);
- 
+
   //   const paymentMethod = req.body.payment_method || "direct";
 
   const productModel = await productfn();
   const cartModel = await cartfn();
   const parentodersModel = await parenOdertfn();
   const orderModel = await orderfn();
+
+  let session;
 
   try {
     //  Load cart
@@ -45,14 +47,14 @@ exports.order = async (req, res, next) => {
       throw error;
     }
 
-    //  Fetch product documents in bulk 
+    //  Fetch product documents in bulk
     const productIds = [
       ...new Set(cart.items.map((id) => id.productId.toString())),
     ].map((id) => new ObjectId(id));
- 
+
     const orderProducts = await productModel.findAllById(productIds);
 
-    const productMap = new Map(orderProducts.map((p) => [p._id.toString(),  p]));
+    const productMap = new Map(orderProducts.map((p) => [p._id.toString(), p]));
 
     //  Compare prices & check stock -> collect any differences
     const priceChanges = [];
@@ -111,7 +113,7 @@ exports.order = async (req, res, next) => {
 
     // starting transaction
     const { client } = await mongodbConnect();
-    const session = client.startSession();
+    session = client.startSession();
     session.startTransaction();
 
     function groupItemsByVendor(items) {
@@ -127,7 +129,6 @@ exports.order = async (req, res, next) => {
     }
 
     const vendorMap = groupItemsByVendor(cart.items);
-    
 
     let parentTotal = 0;
     const vendorOrdersRefs = []; // to build vendor_orders array for parent doc
@@ -155,7 +156,7 @@ exports.order = async (req, res, next) => {
 
     const parentOrderId = parentOrder.insertedId;
 
-/////////////    //  For each vendor group create a child order
+    /////////////    //  For each vendor group create a child order
     for (const [vendorIdStr, items] of vendorMap.entries()) {
       const vendorId = new ObjectId(vendorIdStr);
       const childProducts = [];
@@ -226,8 +227,6 @@ exports.order = async (req, res, next) => {
       session
     );
 
-
-
     // 5e) Clear user's cart (or remove the items that were checked out)
     await cartModel.updateCart(userId, []);
 
@@ -242,8 +241,10 @@ exports.order = async (req, res, next) => {
       total: parentTotal,
     });
   } catch (error) {
-     await session.abortTransaction();
+    if (session) {
+      await session.abortTransaction();
       session.endSession();
+    }
     next(error);
   }
 };

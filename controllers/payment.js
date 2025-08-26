@@ -217,6 +217,7 @@ exports.confirmDelivery = async (req, res, next) => {
   const { vendorOrderId } = req.params;
   const userId = req.user.userId;
 
+  let session;
   try {
     const orderModel = await orderfn();
 
@@ -260,7 +261,7 @@ exports.confirmDelivery = async (req, res, next) => {
 
     // starting session/ transaction
     const { client } = await mongodbConnect();
-    const session = client.startSession();
+     session = client.startSession();
     session.startTransaction();
 
     // update order status to "deliver"
@@ -325,8 +326,10 @@ exports.confirmDelivery = async (req, res, next) => {
       transfer: transfer.data,
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+     if (session) {
+       await session.abortTransaction(); 
+       session.endSession();
+     }
     next(error);
   }
 };
