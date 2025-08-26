@@ -109,6 +109,7 @@ exports.order = async (req, res, next) => {
     //    Use current product.price as authoritative at purchase time (price_at_purchase).
     //    Use transaction for atomicity (requires replica set or Atlas).
 
+    // starting transaction
     const { client } = await mongodbConnect();
     const session = client.startSession();
     session.startTransaction();
@@ -126,7 +127,7 @@ exports.order = async (req, res, next) => {
     }
 
     const vendorMap = groupItemsByVendor(cart.items);
-    console.log(vendorMap);
+    
 
     let parentTotal = 0;
     const vendorOrdersRefs = []; // to build vendor_orders array for parent doc
@@ -241,8 +242,8 @@ exports.order = async (req, res, next) => {
       total: parentTotal,
     });
   } catch (error) {
-    //  await session.abortTransaction();
-    //  session.endSession();
+     await session.abortTransaction();
+      session.endSession();
     next(error);
   }
 };

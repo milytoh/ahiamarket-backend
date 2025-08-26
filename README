@@ -1,0 +1,15 @@
+"pending" → User has not paid yet.
+
+"processing" → Payment is being verified (e.g., just after Paystack init).
+
+"paid_escrow_hold" → Paystack confirms, money is held in escrow.
+
+"partially_released" → Some vendor payouts completed, others pending.
+
+"completed" → All vendor payouts released, transaction done.
+
+"failed" → Payment attempt failed.
+
+"refunded" → Buyer refunded.
+
+"disputed" → Buyer/vendor dispute → hold payment until resolved.

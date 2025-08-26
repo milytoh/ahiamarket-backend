@@ -1,5 +1,3 @@
-
-
 class VendorApplication {
   constructor(db) {
     this.collection = db.collection("vendorApplications");
@@ -37,16 +35,27 @@ class VendorApplication {
   }
 }
 
-class Vendor extends VendorApplication  {
+class Vendor extends VendorApplication {
   constructor(db) {
-    super(db)
+    super(db);
     this.collection = db.collection("vendors");
   }
 
   async createVendor(vendorData) {
-  return  await this.collection.insertOne(vendorData)
+    return await this.collection.insertOne(vendorData);
   }
- 
+
+  async findByVendorId(id) {
+   return await this.collection.findOne({ _id: id });
+  }
+
+  async findVendorByParent(parenOrderId) {
+    return await this.collection
+      .find({
+        parent_order_id: parenOrderId,
+      })
+      .toArray();
+  }
 }
 
-module.exports = { VendorApplication, Vendor  };
+module.exports = { VendorApplication, Vendor };

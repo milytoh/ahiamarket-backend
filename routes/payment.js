@@ -14,6 +14,8 @@ router.get("/paystack/callback", paymentController.paymentCallback);
 
 //to be activate on live server
 // will be called by paystack
-router.post("/paystack/webhook", paymentController.webhooks)
+router.post("/paystack/webhook", paymentController.webhooks);
+
+router.post("/payment/release/:vendorOrderId",isAuth,  paymentController.confirmDelivery);
 
 module.exports = router;
