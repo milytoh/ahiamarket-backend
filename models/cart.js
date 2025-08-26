@@ -33,12 +33,12 @@ class Cart {
     );
   }
 
-  async updateCart(userId, item) {
+  async updateCart(userId, item, session) {
     await this.collection.updateOne(
       { _id: userId },
       {
         $set: { items: item, updatedAt: new Date() },
-      }
+      }, {session}
     );
   }
 

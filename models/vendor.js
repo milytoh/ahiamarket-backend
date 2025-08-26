@@ -46,10 +46,10 @@ class Vendor extends VendorApplication {
   }
 
   async findByVendorId(id) {
-   return await this.collection.findOne({ _id: id });
+    return await this.collection.findOne({ _id: id });
   }
 
-  async findVendorByParent(parenOrderId) {
+  async findVendorOrderByParent(parenOrderId) {
     return await this.collection
       .find({
         parent_order_id: parenOrderId,

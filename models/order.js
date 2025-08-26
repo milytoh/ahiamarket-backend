@@ -38,7 +38,8 @@ class ParentOrders {
           ...updateData,
           updated_at: new Date(),
         },
-      }, {session}
+      },{session}
+     
     );
   }
 }

@@ -98,16 +98,13 @@ exports.directPayment = async (req, res, next) => {
   }
 };
 
-// verification callback
+// verification of payment callback
 exports.paymentCallback = async (req, res, next) => {
   const reference = req.query.reference;
 
-  try {
-    // starting session/ transaction
-    const { client } = await mongodbConnect();
-    const session = client.startSession();
-    session.startTransaction();
+  let session; 
 
+  try {
     //  Verify payment with Paystack
     const verifyResp = await axios.get(
       `https://api.paystack.co/transaction/verify/${reference}`,
@@ -121,59 +118,68 @@ exports.paymentCallback = async (req, res, next) => {
     const data = verifyResp.data.data; // Paystack returns transaction details
 
     if (data.status !== "success") {
-      const error = new Error("payment faild");
+      const error = new Error("payment failed");
       error.status = 400;
       throw error;
     }
 
-    const parentOrderModel = await parentOrderfn();
-    const paymentModel = await paymentfn();
-    const orderModel = await orderfn();
-    ////TODO: move to escrow route
-    const parenOrderId = new ObjectId(data.metadata.parent_order_id);
-     await parentOrderModel.updateParentOrderById(
-      parenOrderId,
+    // starting session/ transaction
+    const { client } = await mongodbConnect();
+    session = client.startSession();
+    await session.withTransaction(async () => {
+      const parentOrderModel = await parentOrderfn();
+      const paymentModel = await paymentfn();
+      const orderModel = await orderfn();
 
-      {
-        "payment.status": "paid_escrow_hold",
-        "payment.transaction_ref": data.reference,
-        order_status: "awaiting_fulfillment",
-      }, session
-    );
+      ////TODO: move to escrow route
+      const parenOrderId = new ObjectId(data.metadata.parent_order_id);
 
-    ///update order with same parentorderid
-    await orderModel.updateManyByParantOrderId(parenOrderId, {
-      "payment.status": "paid_escrow_hold",
-      "payment.transaction_ref": data.reference,
-      order_status: "awaiting_fulfillment",
-    }, session) ;
+      // update parent order
+      await parentOrderModel.updateParentOrderById(
+        parenOrderId,
 
-    //  Create payment record
-    const paymenData = await paymentModel.createPayment({
-      reference: data.reference,
-      orderId: new ObjectId(data.metadata.parent_order_id),
-      buyerId: new ObjectId(data.metadata.buyer_id),
-      amount: data.amount / 100, // convert back from kobo
-      status: data.status,
-      channel: data.channel,
-      paidAt: data.paid_at,
-      currency: data.currency,
-      customerEmail: data.customer.email,
+        {
+          "payment.status": "paid_escrow_hold",
+          "payment.transaction_ref": data.reference,
+          order_status: "awaiting_fulfillment",
+        },
+        session
+      );
+
+      ///update order with same parentorderid/ update child orders
+      await orderModel.updateManyByParantOrderId(
+        parenOrderId,
+        {
+          "payment.status": "paid_escrow_hold",
+          "payment.transaction_ref": data.reference,
+          order_status: "awaiting_fulfillment",
+        },
+        session
+      );
+
+      //  Create payment record
+      const paymenData = await paymentModel.createPayment({
+        reference: data.reference,
+        orderId: new ObjectId(data.metadata.parent_order_id),
+        buyerId: new ObjectId(data.metadata.buyer_id),
+        amount: data.amount / 100, // convert back from kobo
+        status: data.status,
+        channel: data.channel,
+        paidAt: data.paid_at,
+        currency: data.currency,
+        customerEmail: data.customer.email,
+      });
     });
-
-   
-    // Commit transaction
-    await session.commitTransaction();
-    session.endSession();
-
+    
     res.status(200).json({
       seccess: true,
       message: "payment seccessful",
     });
   } catch (error) {
-    await session.abortTransaction();
-    session.endSession();
+    
     next(error);
+  } finally {
+    if (session) session.endSession();
   }
 };
 
@@ -220,54 +226,92 @@ exports.confirmDelivery = async (req, res, next) => {
   let session;
   try {
     const orderModel = await orderfn();
-
-    // checking if vendor order exist
-
-    const vendorOrder = await orderModel.findByVendorOrderId(
-      new ObjectId(vendorOrderId)
-    );
-
-    if (!vendorOrder) {
-      const error = new Error("Order not found");
-      error.status = 404;
-      throw error;
-    }
-
-    //Security check: only buyer who placed this order can confirm
-    if (vendorOrder.buyer_id.toString() !== userId) {
-      const error = new Error("Unauthorize action");
-      error.status = 403;
-      throw error;
-    }
-
-    //calculating vendor and taking 10% from total payout
-    const vendorGross = vendorOrder.total;
-    const vendorNet = Math.floor(vendorGross * 0.9); // removing 10%
-
     const vendorModel = await vendorfn();
-    const vendor = await vendorModel.findByVendorId(vendorOrder.vendor_id);
+    const parenOrderModel = await parentOrderfn();
 
-    if (!vendor) {
-      const error = new Error("Vendor not found");
-      error.status = 404;
-      throw error;
-    }
+    let vendorNet, vendorGross, vendor, vendorOrder;
+
+    // starting session/ transaction
+    const { client } = await mongodbConnect();
+    session = client.startSession();
+  
+
+    await session.withTransaction(async () => {
+      // checking if vendor order exist
+      vendorOrder = await orderModel.findByVendorOrderId(
+        new ObjectId(vendorOrderId)
+      );
+
+      if (!vendorOrder) {
+        const error = new Error("Order not found");
+        error.status = 404;
+        throw error;
+      }
+
+      //Security check: only buyer who placed this order can confirm
+      if (vendorOrder.buyer_id.toString() !== userId) {
+        const error = new Error("Unauthorize action");
+        error.status = 403;
+        throw error;
+      }
+
+      //calculating vendor and taking 10% from total payout
+      vendorGross = vendorOrder.total;
+      vendorNet = Math.floor(vendorGross * 0.9); // removing 10%
+      const vendor = await vendorModel.findByVendorId(vendorOrder.vendor_id);
+
+      if (!vendor) {
+        const error = new Error("Vendor not found");
+        error.status = 404;
+        throw error;
+      }
+
+      // update order status to "pending"
+      await orderModel.updateVendorOrder(
+        vendorOrder._id,
+        {
+          order_status: "delivered",
+          "payment.status": "pending_payout",
+        },
+        session
+      );
+
+      const vendorOrdersForParent = await vendorModel.findVendorOrderByParent(
+        vendorOrder.parent_order_id
+      );
+
+      // Check if all vendorOrders delivered
+      const allDelivered = vendorOrdersForParent.every(
+        (vo) => vo.order_status === "delivered"
+      );
+
+      /// updating parentorder base on some condition
+      if (allDelivered) {
+        await parenOrderModel.updateParentOrderById(
+          vendorOrder.parent_order_id,
+          {
+            order_status: "delivered",
+            "payment.status": "completed",
+          },
+           session 
+        );
+      } else {
+        await parenOrderModel.updateParentOrderById(
+          vendorOrder.parent_order_id,
+          {
+            order_status: "partially_delivered",
+            "payment.status": "partially_released",
+          },
+           session 
+        );
+      }
+    });
 
     // if (!vendor.recipient_code) {
     //   const error = new Error("vender reciepiant code not set");
     //   error.status = 400;
     //   throw error;
     // }
-
-    // starting session/ transaction
-    const { client } = await mongodbConnect();
-     session = client.startSession();
-    session.startTransaction();
-
-    // update order status to "deliver"
-    await orderModel.updateVendorOrder(vendorOrder._id, {
-      order_status: "delivered",
-    }, session);
 
     //  Initiate transfer
     const transfer = await axios.post(
@@ -287,37 +331,14 @@ exports.confirmDelivery = async (req, res, next) => {
     );
 
     // update: payment + status
-    await orderModel.updateVendorOrder(vendorOrder._id, {
-      "payment.status": "released_to_vendor",
-      order_status: "completed",
-    }, session);
-
-    const vendorOrdersForParent = await vendorModel.findVendorOrderByParent(
-      vendorOrder.parent_order_id
+    await orderModel.updateVendorOrder(
+      vendorOrder._id,
+      {
+        "payment.status": "released_to_vendor",
+        order_status: "completed",
+      },
+      session
     );
-
-    // Check if all vendorOrders delivered
-    const allDelivered = vendorOrdersForParent.every(
-      (vo) => vo.order_status === "delivered"
-    );
-
-    /// updating parentorder base on some condition
-    const parenOrderModel = await parenOdertfn();
-    if (allDelivered) {
-      await parenOrderModel.updateParentOrderById(vendorOrder.parent_order_id, {
-        order_status: "delivered",
-        "payment.status": "completed",
-      }, {session});
-    } else {
-      await parenOrderModel.updateParentOrderById(vendorOrder.parent_order_id, {
-        order_status: "partially_delivered",
-        "payment.status": "partially_released",
-      }, {session});
-    }
-
-    // Commit transaction
-    await session.commitTransaction();
-    session.endSession();
 
     res.status(200).json({
       success: true,
@@ -326,10 +347,9 @@ exports.confirmDelivery = async (req, res, next) => {
       transfer: transfer.data,
     });
   } catch (error) {
-     if (session) {
-       await session.abortTransaction(); 
-       session.endSession();
-     }
+    
     next(error);
+  } finally {
+    if (session) session.endSession();
   }
 };

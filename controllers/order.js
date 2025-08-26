@@ -114,125 +114,126 @@ exports.order = async (req, res, next) => {
     // starting transaction
     const { client } = await mongodbConnect();
     session = client.startSession();
-    session.startTransaction();
 
-    function groupItemsByVendor(items) {
-      // items: [{ product_id, vendor_id, quantity, price_at_time }]
-      const map = new Map();
-      for (const item of items) {
-        const key = item.vendorId.toString();
-        if (!map.has(key)) map.set(key, []);
-        map.get(key).push(item);
+    await session.withTransaction(async () => {
+      function groupItemsByVendor(items) {
+        // items: [{ product_id, vendor_id, quantity, price_at_time }]
+        const map = new Map();
+        for (const item of items) {
+          const key = item.vendorId.toString();
+          if (!map.has(key)) map.set(key, []);
+          map.get(key).push(item);
+        }
+
+        return map;
       }
+      const vendorMap = groupItemsByVendor(cart.items);
 
-      return map;
-    }
+      let parentTotal = 0;
+      const vendorOrdersRefs = []; // to build vendor_orders array for parent doc
 
-    const vendorMap = groupItemsByVendor(cart.items);
-
-    let parentTotal = 0;
-    const vendorOrdersRefs = []; // to build vendor_orders array for parent doc
-
-    // 5a) Create parent order doc (payment pending)
-    const parentDoc = {
-      buyerId: userId,
-      vendor_orders: [], // will fill after child orders created
-      payment: {
-        method: "direct",
-        status: "pending",
-        transaction_ref: null,
-      },
-      delivery: {
-        address: cart.delivery_address || "", // user-selected address
-        status: "pending",
-      },
-      total: 0,
-      order_status: "pending",
-      created_at: new Date(),
-      updated_at: new Date(),
-    };
-
-    const parentOrder = await parentodersModel.insertToOder(parentDoc, session);
-
-    const parentOrderId = parentOrder.insertedId;
-
-    /////////////    //  For each vendor group create a child order
-    for (const [vendorIdStr, items] of vendorMap.entries()) {
-      const vendorId = new ObjectId(vendorIdStr);
-      const childProducts = [];
-      let subtotal = 0;
-
-      for (const it of items) {
-        const prod = productMap.get(it.productId.toString());
-        const priceAtPurchase = prod.price; // authoritative current price
-
-        // compute line total
-        const lineTotal = priceAtPurchase * it.quantity;
-        subtotal += lineTotal;
-
-        childProducts.push({
-          productId: new ObjectId(it.productId),
-          quantity: it.quantity,
-          priceAtPurchase,
-        });
-      }
-
-      // Example shipping calculation / fees (customize)
-      const shippingFee = 0; // compute per vendor as needed
-      const totalForVendor = subtotal + shippingFee;
-
-      const childOrderData = {
-        parent_order_id: parentOrderId,
-        buyer_id: new ObjectId(userId),
-        vendor_id: vendorId,
-        products: childProducts,
+      // 5a) Create parent order doc (payment pending)
+      const parentDoc = {
+        buyerId: userId,
+        vendor_orders: [], // will fill after child orders created
         payment: {
           method: "direct",
           status: "pending",
           transaction_ref: null,
         },
         delivery: {
-          address: cart.delivery_address || "",
-          assigned_agent: null,
+          address: cart.delivery_address || "", // user-selected address
           status: "pending",
-          estimated_date: null,
         },
-        subtotal,
-        shipping_fee: shippingFee,
-        total: totalForVendor,
+        total: 0,
         order_status: "pending",
         created_at: new Date(),
         updated_at: new Date(),
       };
 
-      const childOrder = await orderModel.createOrder(childOrderData, session);
-      const childOrderId = childOrder.insertedId;
+      const parentOrder = await parentodersModel.insertToOder(
+        parentDoc,
+        session
+      );
 
-      // Add to parent vendor_orders array
-      vendorOrdersRefs.push({
-        vendor_id: vendorId,
-        order_id: childOrderId,
-        subtotal,
-      });
+      const parentOrderId = parentOrder.insertedId;
 
-      parentTotal += totalForVendor;
-    }
+      /////////////    //  For each vendor group create a child order
+      for (const [vendorIdStr, items] of vendorMap.entries()) {
+        const vendorId = new ObjectId(vendorIdStr);
+        const childProducts = [];
+        let subtotal = 0;
 
-    //Update parent with vendor_orders and total
+        for (const it of items) {
+          const prod = productMap.get(it.productId.toString());
+          const priceAtPurchase = prod.price; // authoritative current price
 
-    await parentodersModel.updateParentOrder(
-      parentOrderId,
-      vendorOrdersRefs,
-      parentTotal,
-      session
-    );
+          // compute line total
+          const lineTotal = priceAtPurchase * it.quantity;
+          subtotal += lineTotal;
 
-    // 5e) Clear user's cart (or remove the items that were checked out)
-    await cartModel.updateCart(userId, []);
+          childProducts.push({
+            productId: new ObjectId(it.productId),
+            quantity: it.quantity,
+            priceAtPurchase,
+          });
+        }
 
-    // Commit transaction
-    await session.commitTransaction();
-    session.endSession();
+        // Example shipping calculation / fees (customize)
+        const shippingFee = 0; // compute per vendor as needed
+        const totalForVendor = subtotal + shippingFee;
+
+        const childOrderData = {
+          parent_order_id: parentOrderId,
+          buyer_id: new ObjectId(userId),
+          vendor_id: vendorId,
+          products: childProducts,
+          payment: {
+            method: "direct",
+            status: "pending",
+            transaction_ref: null,
+          },
+          delivery: {
+            address: cart.delivery_address || "",
+            assigned_agent: null,
+            status: "pending",
+            estimated_date: null,
+          },
+          subtotal,
+          shipping_fee: shippingFee,
+          total: totalForVendor,
+          order_status: "pending",
+          created_at: new Date(),
+          updated_at: new Date(),
+        };
+
+        const childOrder = await orderModel.createOrder(
+          childOrderData,
+          session
+        );
+        const childOrderId = childOrder.insertedId;
+
+        // Add to parent vendor_orders array
+        vendorOrdersRefs.push({
+          vendor_id: vendorId,
+          order_id: childOrderId,
+          subtotal,
+        });
+
+        parentTotal += totalForVendor;
+      }
+
+      //Update parent with vendor_orders and total
+      await parentodersModel.updateParentOrder(
+        parentOrderId,
+        vendorOrdersRefs,
+        parentTotal,
+        session
+      );
+
+      // 5e) Clear user's cart (or remove the items that were checked out)
+      await cartModel.updateCart(userId, [], session);
+    });
 
     return res.status(201).json({
       success: true,
@@ -241,10 +242,8 @@ exports.order = async (req, res, next) => {
       total: parentTotal,
     });
   } catch (error) {
-    if (session) {
-      await session.abortTransaction();
-      session.endSession();
-    }
     next(error);
+  } finally {
+    if (session) session.endSession();
   }
 };
