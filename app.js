@@ -14,7 +14,7 @@ const vendorRoute = require("./routes/vendors");
 const adminRoute = require("./routes/admin");
 const orderRoute = require("./routes/order");
 const cartRoute = require("./routes/cart");
-const paymentRoute = require("./routes/payment");
+const paymentRoute = require("./routes/transaction");
 const walletRoute = require("./routes/wallet");
 
 app.use(express.json());
@@ -39,7 +39,7 @@ app.use("/api/admin", adminRoute);
 app.use("/api", orderRoute);
 app.use("/api", cartRoute);
 app.use("/api", paymentRoute);
-app.use("/api", walletRoute)
+app.use("/api", walletRoute);
 
 //error meddleware
 app.use((error, req, res, nex) => {
@@ -64,4 +64,3 @@ app.listen(PORT, (err) => {
 });
 
 // "C:\Program Files\MongoDB\Server\6.0\bin\mongod.exe" --dbpath "C:\data\db" --replSet rs0
-

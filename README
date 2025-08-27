@@ -13,3 +13,22 @@
 "refunded" → Buyer refunded.
 
 "disputed" → Buyer/vendor dispute → hold payment until resolved.
+
+{
+  _id: ObjectId,
+  reference: String,            // Paystack ref or system ref
+  type: "checkout" | "wallet_funding" | "withdrawal" | "payout",
+  amount: Number,
+  status: "success" | "pending" | "failed",
+  channel: String,              // "card", "bank", "wallet"
+  currency: "NGN",
+  paidAt: Date,
+  customerEmail: String,
+
+  // context (optional, depends on type)
+  orderId: ObjectId,            // only for checkout
+  userId: ObjectId,             // for wallet funding or user withdrawal
+  vendorId: ObjectId,           // for vendor payout
+
+  createdAt: Date
+}
