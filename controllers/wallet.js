@@ -10,6 +10,7 @@ const Wallet = require("../models/wallet");
 const User = require("../models/user");
 
 const { validationResult } = require("express-validator");
+const { error } = require("console");
 
 async function walletfn() {
   const { db } = await mongodbConnect();
@@ -73,5 +74,157 @@ exports.fundWallet = async (req, res, next) => {
   } catch (error) {
     next(error);
   } finally {
+  }
+};
+
+exports.withdraw = async (req, res, next) => {
+  const userId = new ObjectId(req.user.userId);
+  const amount = req.body.amount;
+
+  try {
+    //checking if any field is invalid
+    const result = validationResult(req);
+    if (!result.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid inputs",
+        error: result.array().map((err) => ({
+          field: err.path,
+          errMessage: err.msg,
+        })),
+      });
+    }
+
+    const walletModel = await walletfn();
+
+    const wallet = await walletModel.findWalletByOwnerId(userId);
+
+    if (!wallet) {
+      const error = new Error("wallet not found");
+      error.status = 404;
+      throw error;
+    }
+
+    if (amount < 1000) {
+      const error = new Error("withdrawal of bellow 1000 niara is not allowed");
+      error.status = 409;
+      throw error;
+    }
+
+    if (wallet.balance < amount) {
+      const error = new Error("Insufficient balance");
+      error.status = 400;
+      throw error;
+    }
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.getPayoutDetails = async (req, res, next) => {
+  const { accountNumber, bankCode } = req.body;
+
+  try {
+    // 1. Verify account
+    const resolve = await axios.get(
+      `https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
+      {
+        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+      }
+    );
+
+    console.log(resolve);
+
+    const accountName = resolve.data.data.account_name;
+
+    if (!accountName) {
+      const error = new Error("no accoun found");
+      error.status = 404;
+      throw error;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "account found",
+      accountName,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.setPayoutDetails = async (req, res, next) => {
+  const userId = req.user.userId;
+  const { accountNumber, bankCode } = req.body;
+
+  try {
+    const userModel = await userfn();
+    //checking if any field is invalid
+    const result = validationResult(req);
+    if (!result.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid inputs",
+        error: result.array().map((err) => ({
+          field: err.path,
+          errMessage: err.msg,
+        })),
+      });
+    }
+
+    const user = await userModel.findUserById(new ObjectId(userId));
+
+    if (!user) {
+      const error = new Error("user not found");
+      error.status = 404;
+      throw error;
+    }
+
+    //  Verify account
+    const resolve = await axios.get(
+      `https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
+      {
+        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+      }
+    );
+
+    const accountName = resolve.data.data.account_name;
+
+    if (!accountName) {
+      const error = new Error("no accoun found");
+      error.status = 404;
+      throw error;
+    }
+
+    //  Create recipient
+    const recipient = await axios.post(
+      "https://api.paystack.co/transferrecipient",
+      {
+        type: "nuban",
+        name: accountName,
+        account_number: accountNumber,
+        bank_code: bankCode,
+        currency: "NGN",
+      },
+      {
+        headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
+      }
+    );
+
+    //update user, with payment details
+    await userModel.updateUser(user._id, {
+      bankAccount: {
+        accountNumber,
+        bankCode,
+        accountName,
+        recipientCode: recipient.data.data.recipient_code,
+      },
+    });
+
+    res
+      .status(200)
+      .json({ success: true, message: "Payout details saved successfully" });
+  } catch (error) {
+    next(error);
   }
 };

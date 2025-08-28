@@ -2,21 +2,29 @@ const { ObjectId } = require("mongodb");
 
 const mongodbConnect = require("../models/db");
 
-const {Vendor, VendorApplication}  = require("../models/vendor");
+const { Vendor, VendorApplication } = require("../models/vendor");
+const Wallet = require("../models/wallet");
 
 async function vendorApplication() {
-   const { db } = await mongodbConnect();
+  const { db } = await mongodbConnect();
   return new VendorApplication(db);
 }
 
 async function vendorfn() {
-   const { db } = await mongodbConnect();
+  const { db } = await mongodbConnect();
   return new Vendor(db);
+}
+
+async function walletfn() {
+  const { db } = await mongodbConnect();
+  return new Wallet(db);
 }
 
 // vendor approve
 exports.vendorApprove = async (req, res, next) => {
   const vendorId = req.params.id;
+
+  const walletModel = await vendorfn();
   try {
     const id = new ObjectId(vendorId);
     const vendorApplicationModel = await vendorApplication();
@@ -45,8 +53,11 @@ exports.vendorApprove = async (req, res, next) => {
     await vendorModel.createVendor(approvedVendor);
 
     //delete vendor from vendor application database
-   await vendorApplicationModel.deleteVendorApplicat(applicant._id)
-    
+    await vendorApplicationModel.deleteVendorApplicat(applicant._id);
+
+    await walletModel.findVendorByUserId(new ObjectId(vendorId), {
+      ownerType: "vendor",
+    });
 
     res.status(200).json({
       success: true,

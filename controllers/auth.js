@@ -5,7 +5,6 @@ require("dotenv").config();
 const mongodb = require("mongodb");
 
 const User = require("../models/user");
-const Wallet = require("../models/wallet");
 
 const mongodbConnect = require("../models/db");
 const jwt = require("jsonwebtoken");
@@ -13,11 +12,6 @@ const { validationResult } = require("express-validator");
 const sendOtpEmail = require("../utils/sendOtp");
 const generateOtp = require("../utils/otpGenerator");
 const sendPwdResetEmail = require("../utils/sendPwdReset");
-
-async function walletfn() {
-  const { db } = await mongodbConnect();
-  return new Wallet(db);
-}
 
 exports.signup = async (req, res, next) => {
   const { fullname, email, password } = req.body;

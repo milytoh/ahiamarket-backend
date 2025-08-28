@@ -16,6 +16,8 @@ router.get("/paystack/callback", paymentController.verificationCallback);
 // will be called by paystack
 router.post("/paystack/webhook",  paymentController.webhooks);
 
-router.post("/payment/release/:vendorOrderId",isAuth,  paymentController.confirmDelivery);
+router.post("/payment/release/:vendorOrderId", isAuth, paymentController.confirmDelivery);
+
+
 
 module.exports = router;

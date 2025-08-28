@@ -118,6 +118,7 @@ exports.verificationCallback = async (req, res, next) => {
   const reference = req.query.reference;
 
   let session;
+  let message;
 
   try {
     //  Verify payment with Paystack
@@ -131,8 +132,6 @@ exports.verificationCallback = async (req, res, next) => {
     );
 
     const data = verifyResp.data.data; // Paystack returns transaction details
-
-    console.log(data);
 
     if (data.status !== "success") {
       const error = new Error("payment failed");
@@ -152,19 +151,25 @@ exports.verificationCallback = async (req, res, next) => {
       ////T///////////////////////////////////////////////////////////ODO: move to escrow route
       const parenOrderId = new ObjectId(data.metadata.parent_order_id);
 
-      const walletModel = await walletfn();
       //// to check if payment is deposite, if yes, update wallet
       if (data.metadata.type === "deposite") {
         //update users wallet
+
+        const walletModel = await walletfn();
         const amount = data.amount / 100;
-        await walletModel.updateWallet(data.metadata.userId, amount);
+        await walletModel.updateWallet(
+          new ObjectId(data.metadata.userId),
+          amount
+        );
 
         //insert new documment to transaction collection
-       
+
+        
+
         const transData = {
           reference: data.reference,
           type: "deposite",
-          userId: new ObjectId(data.metadata.user_id),
+          userId: new ObjectId(data.metadata.userId),
           amount: data.amount / 100,
           status: data.status,
           channel: data.channel,
@@ -175,11 +180,8 @@ exports.verificationCallback = async (req, res, next) => {
         };
 
         await transactionModel.createTransaction(transData);
-
-        return res.status(200).json({
-          seccess: true,
-          message: "funds deposite seccessful",
-        });
+        message = "funds deposite seccessful";
+        return;
       }
 
       // update parent order
@@ -221,11 +223,13 @@ exports.verificationCallback = async (req, res, next) => {
       };
 
       await transactionModel.createTransaction(checkoutData);
+
+      message = "checkout payment successfull"
     });
 
     res.status(200).json({
       seccess: true,
-      message: "payment seccessful",
+      message: message,
     });
   } catch (error) {
     next(error);
@@ -274,6 +278,7 @@ exports.confirmDelivery = async (req, res, next) => {
   const { vendorOrderId } = req.params;
   const userId = req.user.userId;
 
+  const walletModel = await walletfn()
   let session;
   try {
     const orderModel = await orderfn();
@@ -308,7 +313,7 @@ exports.confirmDelivery = async (req, res, next) => {
       //calculating vendor and taking 10% from total payout
       vendorGross = vendorOrder.total;
       vendorNet = Math.floor(vendorGross * 0.9); // removing 10%
-      const vendor = await vendorModel.findByVendorId(vendorOrder.vendor_id);
+       vendor = await vendorModel.findByVendorId(vendorOrder.vendor_id);
 
       if (!vendor) {
         const error = new Error("Vendor not found");
@@ -363,22 +368,27 @@ exports.confirmDelivery = async (req, res, next) => {
     //   throw error;
     // }
 
+    //creadit vendors wallet balance
+    //update users wallet
+
+    await walletModel.updateWalletPrice( new ObjectId(vendor.userId), vendorGross);
+
     //  Initiate transfer
-    const transfer = await axios.post(
-      "https://api.paystack.co//transfer",
-      {
-        source: "balance",
-        amount: vendorNet * 100, // kobo
-        recipient: vendor.recipient_code,
-        reason: `Payout for VendorOrder ${vendorOrderId}`,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
+    // const transfer = await axios.post(
+    //   "https://api.paystack.co//transfer",
+    //   {
+    //     source: "balance",
+    //     amount: vendorNet * 100, // kobo
+    //     recipient: vendor.recipient_code,
+    //     reason: `Payout for VendorOrder ${vendorOrderId}`,
+    //   },
+    //   {
+    //     headers: {
+    //       Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+    //       "Content-Type": "application/json",
+    //     },
+    //   }
+    // );
 
     // update: payment + status
     await orderModel.updateVendorOrder(
