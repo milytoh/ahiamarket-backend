@@ -8,6 +8,7 @@ const { session } = require("passport");
 
 const Wallet = require("../models/wallet");
 const User = require("../models/user");
+const Tansaction = require("../models/transaction");
 
 const { validationResult } = require("express-validator");
 const { error } = require("console");
@@ -20,6 +21,11 @@ async function walletfn() {
 async function userfn() {
   const { db } = await mongodbConnect();
   return new User(db);
+}
+
+async function transactionfn() {
+  const { db } = await mongodbConnect();
+  return new Tansaction(db);
 }
 
 exports.fundWallet = async (req, res, next) => {
@@ -77,50 +83,6 @@ exports.fundWallet = async (req, res, next) => {
   }
 };
 
-exports.withdraw = async (req, res, next) => {
-  const userId = new ObjectId(req.user.userId);
-  const amount = req.body.amount;
-
-  try {
-    //checking if any field is invalid
-    const result = validationResult(req);
-    if (!result.isEmpty()) {
-      return res.status(400).json({
-        success: false,
-        message: "Invalid inputs",
-        error: result.array().map((err) => ({
-          field: err.path,
-          errMessage: err.msg,
-        })),
-      });
-    }
-
-    const walletModel = await walletfn();
-
-    const wallet = await walletModel.findWalletByOwnerId(userId);
-
-    if (!wallet) {
-      const error = new Error("wallet not found");
-      error.status = 404;
-      throw error;
-    }
-
-    if (amount < 1000) {
-      const error = new Error("withdrawal of bellow 1000 niara is not allowed");
-      error.status = 409;
-      throw error;
-    }
-
-    if (wallet.balance < amount) {
-      const error = new Error("Insufficient balance");
-      error.status = 400;
-      throw error;
-    }
-  } catch (error) {
-    next(error);
-  }
-};
-
 exports.getPayoutDetails = async (req, res, next) => {
   const { accountNumber, bankCode } = req.body;
 
@@ -132,8 +94,6 @@ exports.getPayoutDetails = async (req, res, next) => {
         headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
       }
     );
-
-    console.log(resolve);
 
     const accountName = resolve.data.data.account_name;
 
@@ -201,10 +161,15 @@ exports.setPayoutDetails = async (req, res, next) => {
       "https://api.paystack.co/transferrecipient",
       {
         type: "nuban",
-        name: accountName,
-        account_number: accountNumber,
-        bank_code: bankCode,
+        name: "miracle nwafor",
+        account_number: "0100000001",
+        bank_code: "044", // Access Bank
         currency: "NGN",
+        // type: "nuban",
+        // name: accountName,
+        // account_number: accountNumber,
+        // bank_code: bankCode,
+        // currency: "NGN",
       },
       {
         headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
@@ -224,6 +189,142 @@ exports.setPayoutDetails = async (req, res, next) => {
     res
       .status(200)
       .json({ success: true, message: "Payout details saved successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+exports.withdraw = async (req, res, next) => {
+  const userId = new ObjectId(req.user.userId);
+  const amount = Math.floor(Number(req.body.amount));
+
+  try {
+    //checking if any field is invalid
+    const result = validationResult(req);
+    if (!result.isEmpty()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid inputs",
+        error: result.array().map((err) => ({
+          field: err.path,
+          errMessage: err.msg,
+        })),
+      });
+    }
+
+    const walletModel = await walletfn();
+    const userModel = await userfn();
+    const transactionModel = await transactionfn();
+
+    const wallet = await walletModel.findWalletByOwnerId(userId);
+
+    if (!wallet) {
+      const error = new Error("wallet not found");
+      error.status = 404;
+      throw error;
+    }
+
+    if (amount < 1000) {
+      const error = new Error("withdrawal of bellow 1000 niara is not allowed");
+      error.status = 409;
+      throw error;
+    }
+
+    if (wallet.balance < amount) {
+      const error = new Error("Insufficient balance");
+      error.status = 400;
+      throw error;
+    }
+
+    // fatch users/vendor recipiant_code
+
+    const user = await userModel.findUserById(userId);
+
+    if (!user) {
+      const error = new Error("user not found");
+      error.status = 404;
+      throw error;
+    }
+
+    if (!user?.bankAccount.recipientCode) {
+      const error = new Error("no withdrawal acct foun");
+      error.status = 404;
+      throw error;
+    }
+
+    const reference = `wd-${userId.toString()}-${
+      user._id
+    }-${Date.now()}`;
+
+    // Create withdrawal transaction (pending)
+    const transactionData = {
+      reference: reference,
+      type: "withdrawal",
+      userId: user._id,
+      amount,
+      status: "pending",
+      channel: "bank_transfer",
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+
+    await transactionModel.createTransaction(transactionData);
+
+    //Deduct immediately from wallet (hold funds)
+    await walletModel.updateWalletPrice(userId, -amount);
+
+  
+
+    //Initiate Paystack Transfer
+    const transfer = await axios.post(
+      "https://api.paystack.co/transfer",
+      {
+        source: "balance",
+        amount: amount * 100, // convert to kobo
+        recipient: user.bankAccount.recipientCode,
+        reason: `Withdrawal ${transactionData.reference}`,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    //update transaction with transfer response
+
+    await transactionModel.updateTransaction(transactionData.reference, {
+      status: transfer.data.data.status,
+      transferId: transfer.data.data.id,
+    });
+
+     res.json({
+       status: "success",
+       message: "Withdrawal initiated",
+       data: transfer.data,
+     });
+    
+    
+    /////TODO: move it to webhook, and
+    
+    // if (event === "transfer.failed") {
+    //   const tx = await db
+    //     .collection("transactions")
+    //     .findOne({ reference: data.reference });
+    //   await db.collection("wallets").updateOne(
+    //     { ownerId: tx.vendorId, ownerType: "vendor" },
+    //     { $inc: { balance: tx.amount } } // refund
+    //   );
+    //   await db
+    //     .collection("transactions")
+    //     .updateOne(
+    //       { reference: data.reference },
+    //       { $set: { status: "failed" } }
+    //     );
+    // }
+
+
   } catch (error) {
     next(error);
   }

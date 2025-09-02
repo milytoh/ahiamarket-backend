@@ -4,12 +4,24 @@ class Transaction {
   }
 
   async createTransaction(transactionData) {
-  return await this.collection.insertOne({
+    return await this.collection.insertOne({
       ...transactionData,
       created_at: new Date(),
       updated_at: new Date(),
     });
   }
+
+  async updateTransaction(reference, updateData) {
+    await this.collection.updateOne(
+      { reference: reference },
+      {
+        $set: {
+          ...updateData,
+          updated_at: new Date(),
+        },
+      }
+    );
+  }
 }
 
-module.exports = Transaction
+module.exports = Transaction;

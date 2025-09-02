@@ -11,7 +11,7 @@ require("./utils/passport");
 const authRoute = require("./routes/auth");
 const productsRoute = require("./routes/products");
 const vendorRoute = require("./routes/vendors");
-const adminRoute = require("./routes/admin");
+const adminRoute = require("./routes/admin/vendor-approve");
 const orderRoute = require("./routes/order");
 const cartRoute = require("./routes/cart");
 const paymentRoute = require("./routes/transaction");

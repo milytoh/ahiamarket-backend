@@ -17,16 +17,6 @@ router.post(
 );
 
 router.post(
-  "wallet/withdraw",
-  body("amount")
-    .notEmpty()
-    .isInt({ min: 1000 })
-    .withMessage("Amount must be at least 1000"),
-  isAuth,
-  walletController.withdraw
-);
-
-router.post(
   "/payment/get-payout-details",
   isAuth,
   walletController.getPayoutDetails
@@ -36,13 +26,25 @@ router.post(
   "/payment/set-payout-details",
   body("bankCode")
     .notEmpty()
-    .isInt({ min: 3, max: 3 })
-    .trim()
+    .isLength({ min: 3, max: 3 })
+    .withMessage("provide a valid bank code")
+    .trim(),
 
-    .withMessage("provide a valide accoun number"),
-  body("accountNumber").notEmpty().isInt().trim(),
+  body("accountNumber")
+    .notEmpty()
+    .withMessage("provide a valide account number")
+    .trim(),
   isAuth,
   walletController.setPayoutDetails
+);
+
+router.post(
+  "/payment/wallet/withdraw",
+  body("amount")
+    .notEmpty()
+    .withMessage("Amount must be at least 1000"),
+  isAuth,
+  walletController.withdraw
 );
 
 module.exports = router;

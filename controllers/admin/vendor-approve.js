@@ -1,9 +1,9 @@
 const { ObjectId } = require("mongodb");
 
-const mongodbConnect = require("../models/db");
+const mongodbConnect = require("../../models/db");
 
-const { Vendor, VendorApplication } = require("../models/vendor");
-const Wallet = require("../models/wallet");
+const { Vendor, VendorApplication } = require("../../models/vendor");
+const Wallet = require("../../models/wallet");
 
 async function vendorApplication() {
   const { db } = await mongodbConnect();

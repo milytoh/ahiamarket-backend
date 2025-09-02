@@ -58,7 +58,7 @@ exports.signup = async (req, res, next) => {
       email_is_verified: false,
       provider: "local",
       googleId: null,
-      role: ["buyer"],
+      role: "buyer",
       is_vendor_approved: false,
       vendor_profile: null,
       wallet: null,

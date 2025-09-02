@@ -362,34 +362,15 @@ exports.confirmDelivery = async (req, res, next) => {
       }
     });
 
-    // if (!vendor.recipient_code) {
-    //   const error = new Error("vender reciepiant code not set");
-    //   error.status = 400;
-    //   throw error;
-    // }
+   
 
     //creadit vendors wallet balance
     //update users wallet
 
-    await walletModel.updateWalletPrice( new ObjectId(vendor.userId), vendorGross);
+    
 
-    //  Initiate transfer
-    // const transfer = await axios.post(
-    //   "https://api.paystack.co//transfer",
-    //   {
-    //     source: "balance",
-    //     amount: vendorNet * 100, // kobo
-    //     recipient: vendor.recipient_code,
-    //     reason: `Payout for VendorOrder ${vendorOrderId}`,
-    //   },
-    //   {
-    //     headers: {
-    //       Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
-    //       "Content-Type": "application/json",
-    //     },
-    //   }
-    // );
-
+    await walletModel.updateWalletPrice(new ObjectId(vendor.userId), vendorGross);
+    
     // update: payment + status
     await orderModel.updateVendorOrder(
       vendorOrder._id,
