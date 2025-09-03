@@ -16,6 +16,7 @@ const orderRoute = require("./routes/order");
 const cartRoute = require("./routes/cart");
 const paymentRoute = require("./routes/transaction");
 const walletRoute = require("./routes/wallet");
+const adminAuthRoute = require("./routes/admin/auth")
 
 app.use(express.json());
 
@@ -40,6 +41,7 @@ app.use("/api", orderRoute);
 app.use("/api", cartRoute);
 app.use("/api", paymentRoute);
 app.use("/api", walletRoute);
+app.use("/api/admin", adminAuthRoute)
 
 //error meddleware
 app.use((error, req, res, nex) => {

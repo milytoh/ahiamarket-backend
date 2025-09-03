@@ -32,3 +32,16 @@
 
   createdAt: Date
 }
+
+
+Admins are not all equal. Example roles:
+
+Super Admin → Full system access (manage roles, configs, payouts, disputes).
+
+Finance Admin → Handle payments, vendor withdrawals, and escrow releases.
+
+Support Admin → Handle disputes, refunds, user/vendor issues.
+
+Content/Market Admin → Approve vendor listings, categories, products.
+
+Moderator → Monitor chat/reviews/reports.

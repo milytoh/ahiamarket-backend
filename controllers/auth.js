@@ -38,6 +38,7 @@ exports.signup = async (req, res, next) => {
     // checking if users email already exist
     if (userEmail) {
       const error = new Error("user with the email already exist");
+      error.status = 409;
       throw error;
     }
 
