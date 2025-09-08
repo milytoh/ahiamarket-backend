@@ -23,6 +23,14 @@ class Admin {
   async deleteAdmin(id) {
     return await this.collection.deleteOne({ _id: id });
   }
+
+  async suspendadmin(id) {
+    await this.collection.updateOne({ _id: id }, {
+      $set: {
+        "status": "suspended"
+      }
+    })
+  }
 }
 
 module.exports = Admin;

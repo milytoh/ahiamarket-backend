@@ -42,6 +42,13 @@ class User {
       $set: updateData
     })
   }
+
+  // update users status
+  async updateStatus(id, data) {
+    await this.collection.updateOne({ _id: id }, {
+      $set: data
+    })
+  }
 }
 
 module.exports = User;

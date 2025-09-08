@@ -11,12 +11,12 @@ require("./utils/passport");
 const authRoute = require("./routes/auth");
 const productsRoute = require("./routes/products");
 const vendorRoute = require("./routes/vendors");
-const adminRoute = require("./routes/admin/vendor-approve");
 const orderRoute = require("./routes/order");
 const cartRoute = require("./routes/cart");
 const paymentRoute = require("./routes/transaction");
 const walletRoute = require("./routes/wallet");
-const adminAuthRoute = require("./routes/admin/auth")
+const adminAuthRoute = require("./routes/admin/auth");
+const adminAdministrationRoute = require("./routes/admin/administration");
 
 app.use(express.json());
 
@@ -36,12 +36,12 @@ app.use(passport.initialize());
 app.use("/api/account", authRoute);
 app.use("/api", productsRoute);
 app.use("/api", vendorRoute);
-app.use("/api/admin", adminRoute);
 app.use("/api", orderRoute);
 app.use("/api", cartRoute);
 app.use("/api", paymentRoute);
 app.use("/api", walletRoute);
-app.use("/api/admin", adminAuthRoute)
+app.use("/api/admin", adminAuthRoute);
+app.use("/api/admin", adminAdministrationRoute)
 
 //error meddleware
 app.use((error, req, res, nex) => {

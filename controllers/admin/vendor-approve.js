@@ -21,13 +21,15 @@ async function walletfn() {
 exports.vendorApprove = async (req, res, next) => {
   const vendorId = req.params.id;
 
-  const walletModel = await vendorfn();
+  const walletModel = await walletfn();
   try {
     const id = new ObjectId(vendorId);
     const vendorApplicationModel = await vendorApplication();
     const applicant = await vendorApplicationModel.findbVendorApplicationById(
       id
     );
+
+    
 
     // checking if application is a valid one
     if (!applicant) {
@@ -52,7 +54,7 @@ exports.vendorApprove = async (req, res, next) => {
     //delete vendor from vendor application database
     await vendorApplicationModel.deleteVendorApplicat(applicant._id);
 
-    await walletModel.findVendorByUserId(new ObjectId(vendorId), {
+    await walletModel.updateWlletByOwnerId(new ObjectId(vendorId), {
       ownerType: "vendor",
     });
 

@@ -21,7 +21,7 @@ exports.createAdmin = async (req, res, next) => {
     const adminModel = await adminfn();
 
     const admin = await adminModel.findAdminById(adminId);
-    console.log(admin)
+    console.log(admin);
     // making sure only supper admin can create admins
     if (admin.role !== "superAdmin") {
       const error = new Error(
@@ -79,7 +79,7 @@ exports.adminLogin = async (req, res, next) => {
 
     // checking for admin email
     const admin = await adminModel.findAdminByEmail(email);
-    console.log(admin);
+
     if (!admin) {
       const error = new Error("Admin with this email do not exist");
       error.status = 404;
@@ -116,66 +116,4 @@ exports.adminLogin = async (req, res, next) => {
     next(error);
   }
 };
-
-exports.deleteAdmin = async (req, res, next) => {
-    const superAdminId = new ObjectId(req.admin.adminId);
-    const adminId = new ObjectId(req.body.adminId);
-  try {
-    const adminModel = await adminfn();
-
-    // checkin and making sure that only supper Admin can delete Admin
-    const superAdmin = await adminModel.findAdminById(superAdminId);
-    if (superAdmin?.role !== "superAdmin") {
-      const error = new Error("unauthorize, only super admin can delete Admin");
-      error.status = 403;
-      throw error;
-    }
-
-    const admin = await adminModel.findAdminById(adminId);
-    if (!admin) {
-      const error = new Error("Admin not found");
-      error.status = 404;
-      throw error;
-    }
-
-    await adminModel.deleteAdmin(admin._id);
-
-    res.status(200).json({
-      success: true,
-      message: `Admin deleted ${admin.name}`,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-
-exports.suspendAdmin = async (req, res, next) => {
-    const adminId = new ObjectId(req.admin.adminId);
-    // const adminId = new ObjectId(req.body.adminId);
-    try {
-
-        const adminModel = await adminfn();
-
-    // checkin and making sure that only supper Admin can delete Admin
-    const admin = await adminModel.findAdminById(adminId);
-    if (admin?.role !== "superAdmin" || admin.role ) {
-      const error = new Error("unauthorize, only super admin can delete Admin");
-      error.status = 403;
-      throw error;
-    }
-
-    const admins = await adminModel.findAdminById(adminId);
-    if (!admin) {
-      const error = new Error("Admin not found");
-      error.status = 404;
-      throw error;
-    }
-
-    } catch (error) {
-        next(error)
-    }
-
-
-}
 

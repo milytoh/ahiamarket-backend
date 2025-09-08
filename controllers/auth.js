@@ -63,6 +63,12 @@ exports.signup = async (req, res, next) => {
       is_vendor_approved: false,
       vendor_profile: null,
       wallet: null,
+      status: {
+        state: "active",
+        reason: null,
+        suspended_until: null,
+        updated_at: new Date(),
+      },
       created_at: Date.now(),
       updated_at: Date.now(),
     };
@@ -191,6 +197,21 @@ exports.login = async (req, res, next) => {
     if (!user) {
       const error = new Error("no user found");
       error.status = 404;
+      throw error;
+    }
+
+    // check if users account is still active
+    if (user.status.state !== "active") {
+      const error = new Error(
+        `your account has been ${user.status.state}, ${
+          user.status.suspended_until
+            ? `accont will be active again on${user.status.suspended_until}`
+            : "You can't access the account again"
+        } `
+      );
+
+      error.status = 403;
+
       throw error;
     }
 
