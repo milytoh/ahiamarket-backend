@@ -223,7 +223,28 @@ exports.fetchAllOrders = async (req, res, next) => {
       error.status = 403;
       throw error;
     }
+
+    const orders = await parentOderModel.fatchAllOrder();
+   
+    res.status(200).json({
+      success: true,
+      message: "fatch all orders",
+      orders
+    })
   } catch (error) {
     next(error);
   }
 };
+
+
+// fatch all transactions
+
+exports.transactions = (req, res, next) => {
+  
+  try {
+
+
+  } catch (error) {
+    next(error)
+  }
+}

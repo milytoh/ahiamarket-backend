@@ -38,9 +38,14 @@ class ParentOrders {
           ...updateData,
           updated_at: new Date(),
         },
-      },{session}
-     
+      },
+      { session }
     );
+  }
+
+  // fatch all parent orders
+  async fatchAllOrder() {
+    return await this.collection.find({}).toArray();
   }
 }
 
@@ -54,22 +59,21 @@ class Orders {
   }
 
   async findByVendorOrderId(id) {
-    return await this.collection
-      .findOne({
-        _id: id,
-      })
-      ;
+    return await this.collection.findOne({
+      _id: id,
+    });
   }
 
   async updateManyByParantOrderId(id, updateData, session) {
     await this.collection.updateMany(
       { parent_order_id: id },
       {
-         $set: {
+        $set: {
           ...updateData,
           updated_at: new Date(),
         },
-      }, {session}
+      },
+      { session }
     );
   }
   async updateVendorOrder(id, data, session) {
@@ -77,7 +81,8 @@ class Orders {
       { _id: id },
       {
         $set: data,
-      }, {session}
+      },
+      { session }
     );
   }
 }
