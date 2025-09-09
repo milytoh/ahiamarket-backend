@@ -9,6 +9,8 @@ const User = require("../../models/user");
 const { Vendor, VendorApplication } = require("../../models/vendor");
 const Wallet = require("../../models/wallet");
 const { ParentOrders } = require("../../models/order");
+const { request } = require("express");
+const Transaction = require("../../models/transaction");
 
 async function adminfn() {
   const { db } = await mongodbConnect();
@@ -35,6 +37,11 @@ async function parentOderfn() {
   return new ParentOrders(db);
 }
 
+async function transactionfn() {
+   const { db } = await mongodbConnect();
+  return new Transaction(db);
+}
+
 // vendor approve
 exports.vendorApprove = async (req, res, next) => {
   const vendorId = req.params.id;
@@ -46,7 +53,7 @@ exports.vendorApprove = async (req, res, next) => {
   try {
     //checking admin permission to approve vendor application
     const admin = await adminModel.findAdminById(adminId);
-    if (admin.role !== "superAdmin" && !admin.permissions.canManageUsers) {
+    if (admin.role !== "superAdmin" && !admin.permissions.canApproveVendors) {
       const error = new Error("unauthorize, permission not granted");
       error.status = 403;
       throw error;
@@ -218,7 +225,7 @@ exports.fetchAllOrders = async (req, res, next) => {
 
     //checking admin permission to delete users account
     const admin = await adminModel.findAdminById(adminId);
-    if (admin.role !== "superAdmin" && !admin.permissions.canManageUsers) {
+    if (admin.role !== "superAdmin" && !admin.role !== "supportAdmin") {
       const error = new Error("unauthorize, permission not granted");
       error.status = 403;
       throw error;
@@ -239,11 +246,27 @@ exports.fetchAllOrders = async (req, res, next) => {
 
 // fatch all transactions
 
-exports.transactions = (req, res, next) => {
-  
+exports.transactions = async(req, res, next) => {
+   const adminId = new ObjectId(req.admin.adminId);
   try {
+    const transactionModel = await transactionfn();
+    const adminModel = await adminfn();
 
+    //checking admin permission to see all transactions
+    const admin = await adminModel.findAdminById(adminId);
+    if (admin.role !== "superAdmin" && !admin.role !== "financeAdmin") {
+      const error = new Error("unauthorize, permission not granted");
+      error.status = 403;
+      throw error;
+    }
 
+    const transactions = await transactionModel.fatchAllTransactions();
+    
+    res.status(200).json({
+      success: true,
+      message: "fetched transactions successfuly",
+      transactions
+    })
   } catch (error) {
     next(error)
   }

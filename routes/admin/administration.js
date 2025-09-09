@@ -23,4 +23,7 @@ router.patch(
 );
 router.get("/orders", adminIsAuth, adminAdminstrationController.fetchAllOrders);
 
+router.get("/transactions", adminIsAuth, adminAdminstrationController.transactions);
+
+
 module.exports = router;

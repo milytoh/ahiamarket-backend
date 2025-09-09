@@ -3,6 +3,10 @@ class Transaction {
     this.collection = db.collection("transactions");
   }
 
+  async fatchAllTransactions() {
+    return await this.collection.find({}).toArray();
+  }
+
   async createTransaction(transactionData) {
     return await this.collection.insertOne({
       ...transactionData,
