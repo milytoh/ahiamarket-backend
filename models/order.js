@@ -85,6 +85,23 @@ class Orders {
       { session }
     );
   }
+
+  async totalSales(matchData) {
+    return await this.collection
+      .aggregate([
+        {
+          $match: matchData,
+        },
+        {
+          $group: {
+            _id: null,
+            totalSales: { $sum: "$total" },
+            totalOrders: {$sum: 1 }
+          },
+        },
+      ])
+      .toArray();
+  }
 }
 
 module.exports = { ParentOrders, Orders };

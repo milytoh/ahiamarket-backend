@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const { body } = require("express-validator");
 
 const { adminIsAuth } = require("../../middlewares/admin-auth");
 
@@ -23,7 +24,19 @@ router.patch(
 );
 router.get("/orders", adminIsAuth, adminAdminstrationController.fetchAllOrders);
 
-router.get("/transactions", adminIsAuth, adminAdminstrationController.transactions);
+router.get(
+  "/transactions",
+  adminIsAuth,
+  adminAdminstrationController.transactions
+);
 
+router.get(
+  "/orders/totalsales",
+  body("fromDate").trim().isDate().withMessage("provide a valid date"),
+  // body("toDate").trim().isDate().withMessage("provide a valid date"),
+  // body("")
+  adminIsAuth,
+  adminAdminstrationController.totalSales
+);
 
 module.exports = router;

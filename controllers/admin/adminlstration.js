@@ -9,8 +9,8 @@ const User = require("../../models/user");
 const { Vendor, VendorApplication } = require("../../models/vendor");
 const Wallet = require("../../models/wallet");
 const { ParentOrders } = require("../../models/order");
-const { request } = require("express");
 const Transaction = require("../../models/transaction");
+const { Orders } = require("../../models/order");
 
 async function adminfn() {
   const { db } = await mongodbConnect();
@@ -38,8 +38,13 @@ async function parentOderfn() {
 }
 
 async function transactionfn() {
-   const { db } = await mongodbConnect();
+  const { db } = await mongodbConnect();
   return new Transaction(db);
+}
+
+async function ordersfn() {
+  const { db } = await mongodbConnect();
+  return new Orders(db);
 }
 
 // vendor approve
@@ -232,22 +237,20 @@ exports.fetchAllOrders = async (req, res, next) => {
     }
 
     const orders = await parentOderModel.fatchAllOrder();
-   
+
     res.status(200).json({
       success: true,
       message: "fatch all orders",
-      orders
-    })
+      orders,
+    });
   } catch (error) {
     next(error);
   }
 };
 
-
 // fatch all transactions
-
-exports.transactions = async(req, res, next) => {
-   const adminId = new ObjectId(req.admin.adminId);
+exports.transactions = async (req, res, next) => {
+  const adminId = new ObjectId(req.admin.adminId);
   try {
     const transactionModel = await transactionfn();
     const adminModel = await adminfn();
@@ -261,13 +264,67 @@ exports.transactions = async(req, res, next) => {
     }
 
     const transactions = await transactionModel.fatchAllTransactions();
-    
+
     res.status(200).json({
       success: true,
       message: "fetched transactions successfuly",
-      transactions
-    })
+      transactions,
+    });
   } catch (error) {
-    next(error)
+    next(error);
   }
-}
+};
+
+// return total sell
+exports.totalSales = async (req, res, next) => {
+  const adminId = new ObjectId(req.admin.adminId);
+  const { fromDate, toDate, vendorId, status } = req.body;
+
+  try {
+    const adminModel = await adminfn();
+    const orderModel = await ordersfn();
+
+    const totalsaleFilterData = {};
+
+    const admin = adminModel.findAdminById(adminId);
+    if (!admin) {
+      const error = new Error("no admin found");
+      error.status = 404;
+      throw error;
+    }
+
+    console.log(req.body);
+
+    function isValidDate(value) {
+      return value instanceof Date && !isNaN(value.getTime());
+    }
+
+    if (isValidDate(new Date(fromDate)) && isValidDate(new Date(toDate))) {
+      totalsaleFilterData.created_at = {
+        $gte: new Date(fromDate),
+        $lte: new Date(toDate),
+      };
+    }
+
+    totalsaleFilterData.order_status = "awaiting_fulfillment"; // should be "delivered"
+
+    if (status) {
+      totalsaleFilterData.order_status = status;
+    }
+
+    // Vendor filter (optional, if admin wants per vendor)
+    if (vendorId) {
+      totalsaleFilterData.vendor_id = new ObjectId(vendorId);
+    }
+
+    const totalsale = await orderModel.totalSales(totalsaleFilterData);
+
+       res.status(200).json({
+      success: true,
+      message: "tatal sales",
+      totalsale,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
