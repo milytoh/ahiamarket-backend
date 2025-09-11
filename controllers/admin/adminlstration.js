@@ -230,7 +230,7 @@ exports.fetchAllOrders = async (req, res, next) => {
 
     //checking admin permission to delete users account
     const admin = await adminModel.findAdminById(adminId);
-    if (admin.role !== "superAdmin" && !admin.role !== "supportAdmin") {
+    if (admin.role !== "superAdmin" && admin.role !== "supportAdmin") {
       const error = new Error("unauthorize, permission not granted");
       error.status = 403;
       throw error;
