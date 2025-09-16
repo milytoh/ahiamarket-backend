@@ -137,6 +137,18 @@ exports.updateProduct = async (req, res, next) => {
 
   const formattedstock = parseInt(stock);
 
+  //checking if any field is invalid
+  if (!result.isEmpty()) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid inputs",
+      error: result.array().map((err) => ({
+        field: err.path,
+        errMessage: err.msg,
+      })),
+    });
+  }
+
   try {
     const vendorModel = await vendorfn();
     const productModel = await productfn();
@@ -172,7 +184,7 @@ exports.updateProduct = async (req, res, next) => {
         average: null,
         count: null,
       },
-      created_at: Date.now(),
+
       updated_at: Date.now(),
     };
 
