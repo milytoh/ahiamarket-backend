@@ -5,6 +5,7 @@ const { validationResult } = require("express-validator");
 
 const Product = require("../../models/product");
 const Admin = require("../../models/admin/admin");
+const AdminLog = require("../../models/admin/admin-log");
 
 async function productfn() {
   const { db } = await mongodbConnect();
@@ -14,6 +15,11 @@ async function productfn() {
 async function adminfn() {
   const { db } = await mongodbConnect();
   return new Admin(db);
+}
+
+async function adminlogfn() {
+  const { db } = await mongodbConnect();
+  return new AdminLog(db);
 }
 
 exports.adminDeleteProduct = async (req, res, next) => {
@@ -48,6 +54,17 @@ exports.adminDeleteProduct = async (req, res, next) => {
     }
 
     await productModel.deleteProductById(product._id);
+
+    //  Save log
+    const adminLogModel = await adminlogfn();
+    const log = {
+      admin_id: adminId,
+      action: "delete prodect",
+      target: { collection: "products", target_id: new ObjectId(adminId) },
+      details: { message: "deleted a product that goes against our rule" },
+      created_at: new Date(),
+    };
+    await adminLogModel.createAdminLog(log);
 
     res.status(200).json({
       success: true,
@@ -155,6 +172,17 @@ exports.editProduct = async (req, res, next) => {
       product.vendorId,
       updateProductData
     );
+
+    //  Save log
+    const adminLogModel = await adminlogfn();
+    const log = {
+      admin_id:adminId,
+      action: "edit product",
+      target: { collection: "products", target_id: new ObjectId(productId) },
+      details: { message: "admin deleted" },
+      created_at: new Date(),
+    };
+    await adminLogModel.createAdminLog(log);
 
     res.status(201).json({
       success: true,

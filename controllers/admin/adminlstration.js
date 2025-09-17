@@ -11,6 +11,7 @@ const Wallet = require("../../models/wallet");
 const { ParentOrders } = require("../../models/order");
 const Transaction = require("../../models/transaction");
 const { Orders } = require("../../models/order");
+const AdminLog = require("../../models/admin/admin-log");
 
 async function adminfn() {
   const { db } = await mongodbConnect();
@@ -47,6 +48,11 @@ async function ordersfn() {
   return new Orders(db);
 }
 
+async function adminlogfn() {
+  const { db } = await mongodbConnect();
+  return new AdminLog(db);
+}
+
 // vendor approve
 exports.vendorApprove = async (req, res, next) => {
   const vendorId = req.params.id;
@@ -54,6 +60,7 @@ exports.vendorApprove = async (req, res, next) => {
 
   const walletModel = await walletfn();
   const adminModel = await adminfn();
+  const adminLogModel = await adminlogfn();
 
   try {
     //checking admin permission to approve vendor application
@@ -97,6 +104,16 @@ exports.vendorApprove = async (req, res, next) => {
       ownerType: "vendor",
     });
 
+    //  Save log
+    const log = {
+      admin_id: adminId,
+      action: "Approve vendor application",
+      target: { collection: "vendor", target_id: new ObjectId(vendorId) },
+      details: { message: "Product deleted by admin" },
+      created_at: new Date(),
+    };
+    await adminLogModel.createAdminLog(log);
+
     res.status(200).json({
       success: true,
       message: "approved vendor application",
@@ -130,6 +147,17 @@ exports.deleteAdmin = async (req, res, next) => {
 
     await adminModel.deleteAdmin(admin._id);
 
+    //  Save log
+    const adminLogModel = await adminlogfn();
+    const log = {
+      admin_id: superAdmin,
+      action: "delete admin",
+      target: { collection: "Admin", target_id: new ObjectId(adminId) },
+      details: { message: "admin deleted" },
+      created_at: new Date(),
+    };
+    await adminLogModel.createAdminLog(log);
+
     res.status(200).json({
       success: true,
       message: `Admin deleted ${admin.name}`,
@@ -162,6 +190,17 @@ exports.suspendAdmin = async (req, res, next) => {
     }
 
     await adminModel.suspendadmin(suspendAdmin._id);
+
+    //  Save log
+    const adminLogModel = await adminlogfn();
+    const log = {
+      admin_id: suspendAdmin,
+      action: "suspend admin",
+      target: { collection: "admin", target_id: new ObjectId(adminId) },
+      details: { message: "suspend admin" },
+      created_at: new Date(),
+    };
+    await adminLogModel.createAdminLog(log);
 
     res.status(200).json({
       success: true,
@@ -211,6 +250,17 @@ exports.chengeStatus = async (req, res, next) => {
     //  "active" | "suspended" | "banned",
 
     await userModel.updateStatus(user._id, statusData);
+
+    //  Save log
+    const adminLogModel = await adminlogfn();
+    const log = {
+      admin_id: adminId,
+      action: "suspend a user or vendor account",
+      target: { collection: "user/vendor", target_id: new ObjectId(user._id) },
+      details: { message: "user account was suspended because of illigal activities" },
+      created_at: new Date(),
+    };
+    await adminLogModel.createAdminLog(log);
 
     res.status(200).json({
       success: true,
@@ -319,7 +369,7 @@ exports.totalSales = async (req, res, next) => {
 
     const totalsale = await orderModel.totalSales(totalsaleFilterData);
 
-       res.status(200).json({
+    res.status(200).json({
       success: true,
       message: "tatal sales",
       totalsale,
