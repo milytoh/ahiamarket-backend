@@ -15,6 +15,7 @@ const orderRoute = require("./routes/order");
 const cartRoute = require("./routes/cart");
 const paymentRoute = require("./routes/transaction");
 const walletRoute = require("./routes/wallet");
+const followerRoute = require("./routes/follower")
 const adminAuthRoute = require("./routes/admin/auth");
 const adminAdministrationRoute = require("./routes/admin/administration");
 const adminProduct = require("./routes/admin/product");
@@ -41,6 +42,7 @@ app.use("/api", orderRoute);
 app.use("/api", cartRoute);
 app.use("/api", paymentRoute);
 app.use("/api", walletRoute);
+app.use("/api", followerRoute)
 app.use("/api/admin", adminAuthRoute);
 app.use("/api/admin", adminAdministrationRoute);
 app.use("/api/admin", adminProduct)
@@ -67,4 +69,4 @@ app.listen(PORT, (err) => {
   console.log(`server is runing at port ${PORT}`);
 });
 
-// "C:\Program Files\MongoDB\Server\6.0\bin\mongod.exe" --dbpath "C:\data\db" --replSet rs0
+// 
