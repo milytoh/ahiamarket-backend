@@ -12,3 +12,4 @@ router.get("/product/:id/update", isAuth, productsController.getUpdateProduct);
 router.patch("/product/:id/update", isAuth, productsController.updateProduct);
 
 module.exports = router;
+  

@@ -10,7 +10,7 @@ router.post(
   "/cart/items",
   body("quantity").notEmpty().withMessage("must have a quantity").isNumeric(),
   isAuth,
-  cartController.addToCart
+  cartController.addToCart  
 );
 router.get("/cart", isAuth, cartController.getCart);
 router.patch("/cart/items/:itemId", isAuth, cartController.updateCartItem);

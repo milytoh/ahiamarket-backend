@@ -16,7 +16,7 @@ const mongodbConnect = async () => {
 
     await client.connect();
     db = client.db(dbName);
-    console.log("✅ Connected to MongoDB Atlas");
+    console.log(" Connected to MongoDB Atlas");
 
     // Graceful shutdown
     process.on("SIGINT", async () => {

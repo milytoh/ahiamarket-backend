@@ -12,6 +12,12 @@ const { validationResult } = require("express-validator");
 const sendOtpEmail = require("../utils/sendOtp");
 const generateOtp = require("../utils/otpGenerator");
 const sendPwdResetEmail = require("../utils/sendPwdReset");
+const Wallet = require("../models/wallet")
+
+async function walletfn() {
+  const { db } = await mongodbConnect();
+  return new Wallet(db);
+}
 
 exports.signup = async (req, res, next) => {
   const { fullname, email, password } = req.body;
@@ -82,13 +88,13 @@ exports.signup = async (req, res, next) => {
 
     // creating users wallet
     const walletData = {
-      ownerId: result._id,
+      ownerId: result.insertedId,
       ownerType: "user",
       balance: 0,
       currency: "NGN",
-    };
+    };  
     const walletModel = await walletfn();
-    await walletModel.createWallet(walletData);
+    await walletModel.createWallet(walletData); 
 
     await userModel.findUserById(result.insertedId);
 
