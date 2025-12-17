@@ -9,7 +9,7 @@ const authController = require("../controllers/auth");
 
 router.post(
   "/signup",
-  body("fullname")
+  body("fullName")
     .notEmpty()
     .withMessage("name field must not be empty")
     .trim()
@@ -20,13 +20,17 @@ router.post(
     .withMessage("please provide a valide email")
     .trim()
     .normalizeEmail(),
-  body("password")
-    .notEmpty()
-    .isAlphanumeric()
-    .withMessage("password must contain leters and at least a number ")
-    .trim()
-    .isLength({ min: 6 })
-    .withMessage("password legnth must be 5 characters and above"),
+ body("password")
+  .trim()
+  .notEmpty()
+  .withMessage("Password is required")
+  .isLength({ min: 8 })
+  .withMessage("Password must be at least 8 characters long")
+  .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+  .withMessage(
+    "Password must include uppercase, lowercase, number and special character"
+  ),
+  
 
   authController.signup
 );

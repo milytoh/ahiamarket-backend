@@ -20,7 +20,9 @@ async function walletfn() {
 }
 
 exports.signup = async (req, res, next) => {
-  const { fullname, email, password } = req.body;
+  const { fullName, email, password, terms } = req.body;
+
+  console.log(req.body)
 
   const result = validationResult(req);
 
@@ -56,10 +58,11 @@ exports.signup = async (req, res, next) => {
 
     // grouping user data object
     const userData = {
-      fullname: fullname,
+      fullname: fullName,
       email: email,
       // phone: phone,
       password: hashed_pwd,
+      termsCondition: true,
       otp: otp,
       otpExpiresAt: otpExpiresAt,
       email_is_verified: false,
@@ -91,7 +94,7 @@ exports.signup = async (req, res, next) => {
       ownerId: result.insertedId,
       ownerType: "user",
       balance: 0,
-      currency: "NGN",
+      currency: "NGN", 
     };  
     const walletModel = await walletfn();
     await walletModel.createWallet(walletData); 
