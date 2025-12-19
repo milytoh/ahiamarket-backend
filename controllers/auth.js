@@ -24,16 +24,13 @@ exports.signup = async (req, res, next) => {
 
   const result = validationResult(req);
 
-  //checking if any field is invalid
   if (!result.isEmpty()) {
-    return res.status(400).json({
-      message: "Invalid inputs",
-      error: result.array().map((err) => ({
-        field: err.path,
-        errMessage: err.msg,
-      })),
-    });
-  }
+  const error = new Error("Invalid inputs");
+  error.statusCode = 400;
+  error.errors = result.array();
+  next(error);
+  return;
+}
 
   try {
     const { db } = await mongodbConnect();
@@ -45,6 +42,8 @@ exports.signup = async (req, res, next) => {
     if (userEmail) {
       const error = new Error("user with the email already exist!");
       error.status = 409;
+      error.isOperational = true
+      error.errors = [{ field: "email", message: "This email is already registered" }];
       throw error;
     }
 
@@ -84,6 +83,7 @@ exports.signup = async (req, res, next) => {
     if (!result) {
       const error = new Error("creating account failed!");
       error.status = 409;
+      error.isOperational= true
       throw error;
     }
 

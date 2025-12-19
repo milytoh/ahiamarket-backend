@@ -66,23 +66,58 @@ app.use("/api/admin", adminAdministrationRoute);
 app.use("/api/admin", adminProduct)
 
 //error meddleware
-app.use((error, req, res, nex) => {
-  console.log(error, "1er");
-  const statusCode = error.status || 500;
-  let message = error.message || "something went wrong";
+// app.use((error, req, res, nex) => {
+//   console.log(error, "1er");
+//   const statusCode = error.status || 500;
+//   let message = error.message || "something went wrong";
 
- return res.status(statusCode).json({
+//  return res.status(statusCode).json({
+//     success: false,
+//     status: statusCode,
+//     message: message,
+//   });
+// });
+
+app.use((error, req, res, next) => {
+  let statusCode = error.statusCode || 500;
+  let message = "Something went wrong";
+  let errors = null;
+
+  if (error.isOperational) {
+    message = error.message;
+  }
+
+  if (error.array && typeof error.array === "function") {
+    statusCode = 400;
+    message = "Invalid inputs";
+    errors = error.array().map(err => ({
+      field: err.path,
+      message: err.msg,
+    }));
+  }
+
+  
+  if (error.code === 11000) {
+    statusCode = 409;
+    message = "Email already exists";
+  }
+
+  
+  console.error(" SERVER ERROR:", error);
+  
+  res.status(statusCode).json({
     success: false,
-    status: statusCode,
-    message: message,
+    message,
+    errors,
   });
 });
+
 
 const PORT = 3000;
 
 app.listen(PORT, (err) => {
   if (err) {
-    console.log(err);
+    console.log(err); 
   }
   console.log(`server is runing at port ${PORT}`);
 });
