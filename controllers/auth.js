@@ -12,7 +12,7 @@ const { validationResult } = require("express-validator");
 const sendOtpEmail = require("../utils/sendOtp");
 const generateOtp = require("../utils/otpGenerator");
 const sendPwdResetEmail = require("../utils/sendPwdReset");
-const Wallet = require("../models/wallet")
+const Wallet = require("../models/wallet");
 
 async function walletfn() {
   const { db } = await mongodbConnect();
@@ -21,8 +21,6 @@ async function walletfn() {
 
 exports.signup = async (req, res, next) => {
   const { fullName, email, password, terms } = req.body;
-
-  console.log(req.body)
 
   const result = validationResult(req);
 
@@ -45,7 +43,7 @@ exports.signup = async (req, res, next) => {
 
     // checking if users email already exist
     if (userEmail) {
-      const error = new Error("user with the email already exist");
+      const error = new Error("user with the email already exist!");
       error.status = 409;
       throw error;
     }
@@ -94,10 +92,10 @@ exports.signup = async (req, res, next) => {
       ownerId: result.insertedId,
       ownerType: "user",
       balance: 0,
-      currency: "NGN", 
-    };  
+      currency: "NGN",
+    };
     const walletModel = await walletfn();
-    await walletModel.createWallet(walletData); 
+    await walletModel.createWallet(walletData);
 
     await userModel.findUserById(result.insertedId);
 
@@ -109,9 +107,10 @@ exports.signup = async (req, res, next) => {
       // userData: user,
     });
   } catch (err) {
-    next(err);
+   
+    return next(err);
   }
-};
+}; 
 
 exports.otpRequest = async (req, res, next) => {
   const email = req.body.email;

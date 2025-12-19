@@ -67,11 +67,11 @@ app.use("/api/admin", adminProduct)
 
 //error meddleware
 app.use((error, req, res, nex) => {
-  console.log(error);
+  console.log(error, "1er");
   const statusCode = error.status || 500;
-  const message = error.message || "something went wrong";
+  let message = error.message || "something went wrong";
 
-  res.status(statusCode).json({
+ return res.status(statusCode).json({
     success: false,
     status: statusCode,
     message: message,
