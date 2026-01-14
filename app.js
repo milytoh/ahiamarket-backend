@@ -80,7 +80,7 @@ app.use("/api/admin", adminProduct)
 
 app.use((error, req, res, next) => {
   let statusCode = error.statusCode || 500;
-  let message = "Something went wrong";
+  let message = "Something went wrong!";
   let errors = null;
 
   if (error.isOperational) {

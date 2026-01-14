@@ -20,25 +20,32 @@ router.post(
     .withMessage("please provide a valide email")
     .trim()
     .normalizeEmail(),
- body("password")
-  .trim()
-  .notEmpty()
-  .withMessage("Password is required")
-  .isLength({ min: 8 })
-  .withMessage("Password must be at least 8 characters long")
-  .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
-  .withMessage(
-    "Password must include uppercase, lowercase, number and special character"
-  ),
-  
+  body("password")
+    .trim()
+    .notEmpty()
+    .withMessage("Password is required")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters long")
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+    .withMessage(
+      "Password must include uppercase, lowercase, number and special character"
+    ),
 
   authController.signup
 );
 router.post("/login", authController.login);
 
-router.get("/otp/request", authController.otpRequest )
+router.get("/otp/request", authController.otpRequest);
 
-router.post("/email/verify", authController.emailVerify);
+router.post(
+  "/email/verify",
+  body("email")
+    .isEmail()
+    .withMessage("please provide a valide email")
+    .trim()
+    .normalizeEmail(),
+  authController.emailVerify
+);
 
 router.post("/request-password-reset", authController.requestPasswordReset);
 

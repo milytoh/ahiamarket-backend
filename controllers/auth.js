@@ -25,12 +25,12 @@ exports.signup = async (req, res, next) => {
   const result = validationResult(req);
 
   if (!result.isEmpty()) {
-  const error = new Error("Invalid inputs");
-  error.statusCode = 400;
-  error.errors = result.array();
-  next(error);
-  return;
-}
+    const error = new Error("Invalid inputs");
+    error.statusCode = 400;
+    error.errors = result.array();
+    next(error);
+    return;
+  }
 
   try {
     const { db } = await mongodbConnect();
@@ -42,8 +42,10 @@ exports.signup = async (req, res, next) => {
     if (userEmail) {
       const error = new Error("user with the email already exist!");
       error.status = 409;
-      error.isOperational = true
-      error.errors = [{ field: "email", message: "This email is already registered" }];
+      error.isOperational = true;
+      error.errors = [
+        { field: "email", message: "This email is already registered" },
+      ];
       throw error;
     }
 
@@ -83,7 +85,7 @@ exports.signup = async (req, res, next) => {
     if (!result) {
       const error = new Error("creating account failed!");
       error.status = 409;
-      error.isOperational= true
+      error.isOperational = true;
       throw error;
     }
 
@@ -107,10 +109,9 @@ exports.signup = async (req, res, next) => {
       // userData: user,
     });
   } catch (err) {
-   
     return next(err);
   }
-}; 
+};
 
 exports.otpRequest = async (req, res, next) => {
   const email = req.body.email;
@@ -124,12 +125,14 @@ exports.otpRequest = async (req, res, next) => {
     if (!user) {
       const error = new Error("user with this email does not exist");
       error.status = 404;
+      error.isOperational = true;
       throw error;
     }
 
     if (user.email_is_verified) {
       const error = new Error("user with this email already verified");
       error.status = 409;
+      error.isOperational = true;
       throw error;
     }
 
@@ -168,11 +171,15 @@ exports.emailVerify = async (req, res, next) => {
     if (!user) {
       const error = new Error('User not found"');
       error.status = 404;
+      error.isOperational = true;
       throw error;
     }
 
+    console.log(otp, user.otp);
+
     if (user.otp !== otp || user.otpExpiresAt < Date.now()) {
       const error = new Error("Invalid or expired OTP");
+      error.isOperational = true;
       error.status = 400;
       throw error;
     }
