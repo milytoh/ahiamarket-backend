@@ -33,7 +33,15 @@ router.post(
 
   authController.signup
 );
-router.post("/login", authController.login);
+router.post(
+  "/login",
+  body("email")
+    .isEmail()
+    .withMessage("please provide a valide email")
+    .trim()
+    .normalizeEmail(),
+  authController.login
+);
 
 router.get("/otp/request", authController.otpRequest);
 

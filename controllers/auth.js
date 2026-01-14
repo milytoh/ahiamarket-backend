@@ -175,8 +175,6 @@ exports.emailVerify = async (req, res, next) => {
       throw error;
     }
 
-    console.log(otp, user.otp);
-
     if (user.otp !== otp || user.otpExpiresAt < Date.now()) {
       const error = new Error("Invalid or expired OTP");
       error.isOperational = true;
@@ -203,6 +201,7 @@ exports.emailVerify = async (req, res, next) => {
 //post login
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
+  console.log(req.body)
   try {
     const { db } = await mongodbConnect();
     const userModel = new User(db);
@@ -212,6 +211,7 @@ exports.login = async (req, res, next) => {
     if (!user) {
       const error = new Error("no user found");
       error.status = 404;
+      error.isOperational = true
       throw error;
     }
 
@@ -226,7 +226,7 @@ exports.login = async (req, res, next) => {
       );
 
       error.status = 403;
-
+      error.isOperational = true
       throw error;
     }
 
@@ -234,7 +234,8 @@ exports.login = async (req, res, next) => {
     const pwdIsMatch = await bcrypt.compare(password, user.password);
     if (!pwdIsMatch) {
       const error = new Error("incorrect password");
-      error.status = 401;
+      error.status = 401; 
+      error.isOperational = true
       throw error;
     }
 
@@ -242,6 +243,7 @@ exports.login = async (req, res, next) => {
     if (!user.email_is_verified) {
       const err = new Error("please verify your email to continue");
       err.status = 403;
+      err.isOperational = true
       throw err;
     }
 
