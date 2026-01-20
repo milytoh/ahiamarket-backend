@@ -55,6 +55,7 @@ exports.vendorApplication = async (req, res, next) => {
       const error = new Error(
         "this user have already applied for a vendor, wait for confirmation"
       );
+      error.isOperational =true
       error.status = 409;
       throw error;
     }
@@ -64,6 +65,7 @@ exports.vendorApplication = async (req, res, next) => {
     if (vendor) {
       const error = new Error("users is already a vendor");
       error.status = 409;
+      error.isOperational = true
       throw error;
     }
 

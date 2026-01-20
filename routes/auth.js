@@ -55,16 +55,16 @@ router.post(
   authController.emailVerify
 );
 
-router.post("/request-password-reset", authController.requestPasswordReset);
+router.post("/request-password-reset", authController.requestPasswordReset); 
 
 router.patch("/resetPassword", authController.passwordReset);
 
-//google auth
+//google auth 
 router.get(
   "/auth/google",
-  passport.authenticate("google", { scope: ["profile", "email"] })
+  passport.authenticate("google", { scope: ["profile", "email"] })   
 );
-
+ 
 router.get(
   "/auth/callback",
   passport.authenticate("google", { session: false, failWithError: true }),

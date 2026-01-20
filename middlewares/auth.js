@@ -8,6 +8,7 @@ exports.isAuth = (req, res, next) => {
   // Expecting header like: Bearer <token>
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
     const err = new Error("Token missing or malformed");
+    err.isOperational = true
     err.status = 401;
     throw err;
   }

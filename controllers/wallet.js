@@ -100,6 +100,7 @@ exports.getPayoutDetails = async (req, res, next) => {
     if (!accountName) {
       const error = new Error("no accoun found");
       error.status = 404;
+      error.isOperational = true;
       throw error;
     }
 

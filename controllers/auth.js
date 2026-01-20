@@ -296,7 +296,7 @@ exports.requestPasswordReset = async (req, res, next) => {
         expiresIn: "1h",
       }
     );
-    console.log(4444, token);
+    
 
     await sendPwdResetEmail(email, user._id, token);
 
@@ -383,6 +383,7 @@ exports.googleAuth = async (req, res, next) => {
       if (!result) {
         const error = new Error("creating account failed!");
         error.status = 409;
+        error.isOperational = true
         throw error;
       }
     }
