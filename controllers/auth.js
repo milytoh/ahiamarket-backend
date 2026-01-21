@@ -201,7 +201,7 @@ exports.emailVerify = async (req, res, next) => {
 //post login
 exports.login = async (req, res, next) => {
   const { email, password } = req.body;
-  console.log(req.body)
+  console.log(req.body);
   try {
     const { db } = await mongodbConnect();
     const userModel = new User(db);
@@ -211,7 +211,7 @@ exports.login = async (req, res, next) => {
     if (!user) {
       const error = new Error("no user found");
       error.status = 404;
-      error.isOperational = true
+      error.isOperational = true;
       throw error;
     }
 
@@ -222,11 +222,11 @@ exports.login = async (req, res, next) => {
           user.status.suspended_until
             ? `accont will be active again on${user.status.suspended_until}`
             : "You can't access the account again"
-        } `
+        } `,
       );
 
       error.status = 403;
-      error.isOperational = true
+      error.isOperational = true;
       throw error;
     }
 
@@ -234,8 +234,8 @@ exports.login = async (req, res, next) => {
     const pwdIsMatch = await bcrypt.compare(password, user.password);
     if (!pwdIsMatch) {
       const error = new Error("incorrect password");
-      error.status = 401; 
-      error.isOperational = true
+      error.status = 401;
+      error.isOperational = true;
       throw error;
     }
 
@@ -243,7 +243,7 @@ exports.login = async (req, res, next) => {
     if (!user.email_is_verified) {
       const err = new Error("please verify your email to continue");
       err.status = 403;
-      err.isOperational = true
+      err.isOperational = true;
       throw err;
     }
 
@@ -257,7 +257,7 @@ exports.login = async (req, res, next) => {
       jwt_secret,
       {
         expiresIn: "6h",
-      }
+      },
     );
 
     res.status(200).json({
@@ -294,9 +294,8 @@ exports.requestPasswordReset = async (req, res, next) => {
       jwt_secret,
       {
         expiresIn: "1h",
-      }
+      },
     );
-    
 
     await sendPwdResetEmail(email, user._id, token);
 
@@ -383,17 +382,12 @@ exports.googleAuth = async (req, res, next) => {
       if (!result) {
         const error = new Error("creating account failed!");
         error.status = 409;
-        error.isOperational = true
+        error.isOperational = true;
         throw error;
       }
     }
 
-    return res.json({
-      success: true,
-      message: "Authentication successful",
-      token,
-      userData: userData,
-    });
+    return res.redirect(`http://localhost:5173/auth/callback?token=${token}`);
   } catch (err) {
     console.log(err);
     const error = new Error(" Google authentication failed");
