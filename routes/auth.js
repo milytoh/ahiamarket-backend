@@ -55,9 +55,26 @@ router.post(
   authController.emailVerify
 );
 
-router.post("/request-password-reset", authController.requestPasswordReset); 
+router.post("/request-password-reset",  body("email")
+    .isEmail()
+    .withMessage("please provide a valide email")
+    .trim()
+    .normalizeEmail(), authController.requestPasswordReset); 
 
-router.patch("/resetPassword", authController.passwordReset);
+router.patch(
+  "/resetPassword",
+  body("password")
+    .trim()
+    .notEmpty()
+    .withMessage("Password is required")
+    .isLength({ min: 8 })
+    .withMessage("Password must be at least 8 characters long")
+    .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).+$/)
+    .withMessage(
+      "Password must include uppercase, lowercase, number and special character",
+    ),
+  authController.passwordReset,
+);
 
 //google auth 
 router.get(

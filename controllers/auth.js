@@ -274,6 +274,7 @@ exports.login = async (req, res, next) => {
 exports.requestPasswordReset = async (req, res, next) => {
   const email = req.body.email;
 
+
   try {
     const { db } = await mongodbConnect();
     const userModel = new User(db);
@@ -282,6 +283,7 @@ exports.requestPasswordReset = async (req, res, next) => {
     if (!user) {
       const error = new Error("user not found");
       error.status = 404;
+      error.isOperational = true;
       throw error;
     }
     const jwt_secret = process.env.JWT_SECRET;
@@ -296,7 +298,7 @@ exports.requestPasswordReset = async (req, res, next) => {
         expiresIn: "1h",
       },
     );
-
+ 
     await sendPwdResetEmail(email, user._id, token);
 
     res.status(200).json({
@@ -313,9 +315,6 @@ exports.passwordReset = async (req, res, next) => {
   const { password } = req.body;
   const { id, token } = req.query;
 
-  console.log(req.query);
-
-  console.log(id, token, password);
 
   try {
     const { db } = await mongodbConnect();
@@ -329,6 +328,7 @@ exports.passwordReset = async (req, res, next) => {
     if (!user) {
       const error = new Error("user not found");
       error.status = 404;
+      error.isOperational = true;
       throw error;
     }
 

@@ -10,7 +10,7 @@ const sendPwdResetEmail = async (email, userId, token) => {
     },
   });
 
-  const resetURL = `https://localhost:3000/account/request-password-reset?id=${userId}&token=${token}`;
+  const resetURL = `http://localhost:5173/account/request-password-reset?id=${userId}&token=${token}`;
 
   const mailOptions = {
     from: `"AhiaMarket" <${process.env.EMAIL_USER}>`,
