@@ -58,8 +58,8 @@ class User {
 
   //users profile
   async profile(userId) {
-    return await this.collection.aggregate([
-      { $match: { _id: ObjectId(userId) } },
+    const pipeline = [
+      { $match: { _id: userId } },
 
       /* Orders */
       {
@@ -194,8 +194,11 @@ class User {
             ],
           },
         },
-      }, 
-    ]);
+      },
+    ];
+    const result = await this.collection.aggregate(pipeline).toArray();
+
+    return result[0] || null;
   }
 }
 
