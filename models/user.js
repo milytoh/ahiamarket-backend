@@ -138,10 +138,10 @@ class User {
         $project: {
           user: {
             id: "$_id",
-            fullName: "$fullName",
+            fullName: "$fullname",
             email: "$email",
             avatar: "$avatar",
-            memberSince: "$createdAt",
+            memberSince: "$created_at",
           },
 
           stats: {
