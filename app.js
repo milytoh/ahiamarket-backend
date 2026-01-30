@@ -17,6 +17,7 @@ const paymentRoute = require("./routes/transaction");
 const walletRoute = require("./routes/wallet");
 const followerRoute = require("./routes/follower")
 const adminAuthRoute = require("./routes/admin/auth");
+const profileRoute = require("./routes/profile")
 const adminAdministrationRoute = require("./routes/admin/administration");
 const adminProduct = require("./routes/admin/product");
 
@@ -63,20 +64,10 @@ app.use("/api", walletRoute);
 app.use("/api", followerRoute)
 app.use("/api/admin", adminAuthRoute);
 app.use("/api/admin", adminAdministrationRoute);
-app.use("/api/admin", adminProduct)
+app.use("/api/admin", adminProduct);
+app.use("/api/user", profileRoute)
 
-//error meddleware
-// app.use((error, req, res, nex) => {
-//   console.log(error, "1er");
-//   const statusCode = error.status || 500;
-//   let message = error.message || "something went wrong";
 
-//  return res.status(statusCode).json({
-//     success: false,
-//     status: statusCode,
-//     message: message,
-//   });
-// });
 
 app.use((error, req, res, next) => {
   let statusCode = error.statusCode || 500;

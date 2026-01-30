@@ -239,14 +239,6 @@ exports.login = async (req, res, next) => {
       throw error;
     }
 
-    //checking if email is verified befor allowing you to login
-    if (!user.email_is_verified) {
-      const err = new Error("please verify your email to continue");
-      err.status = 403;
-      err.isOperational = true;
-      throw err;
-    }
-
     const jwt_secret = process.env.JWT_SECRET;
     // generating a jwtoken
     const token = jwt.sign(
@@ -259,6 +251,28 @@ exports.login = async (req, res, next) => {
         expiresIn: "6h",
       },
     );
+
+    //checking if email is verified befor allowing you to login
+    if (!user.email_is_verified) {
+       //generating Otp
+    const otp = generateOtp();
+    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+
+    const updateData = {
+      otp: otp,
+      otpExpiresAt: otpExpiresAt,
+    };
+
+    await userModel.updateUserByEmail(user.email, updateData);
+
+    await sendOtpEmail(email, otp);
+
+      const err = new Error("please verify your email to continue");
+      err.status = 403;
+    
+      err.isOperational = true;
+      throw err;
+    }
 
     res.status(200).json({
       success: true,
@@ -273,7 +287,6 @@ exports.login = async (req, res, next) => {
 // sending a rest password link to your email
 exports.requestPasswordReset = async (req, res, next) => {
   const email = req.body.email;
-
 
   try {
     const { db } = await mongodbConnect();
@@ -298,7 +311,7 @@ exports.requestPasswordReset = async (req, res, next) => {
         expiresIn: "1h",
       },
     );
- 
+
     await sendPwdResetEmail(email, user._id, token);
 
     res.status(200).json({
@@ -314,7 +327,6 @@ exports.requestPasswordReset = async (req, res, next) => {
 exports.passwordReset = async (req, res, next) => {
   const { password } = req.body;
   const { id, token } = req.query;
-
 
   try {
     const { db } = await mongodbConnect();
