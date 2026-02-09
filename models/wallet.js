@@ -4,11 +4,16 @@ class Wallet {
   }
 
   async createWallet(walletDate) {
-    return await this.collection.insertOne({
+    const wallet = await this.collection.insertOne({
       ...walletDate,
       created_at: new Date(),
       updated_at: new Date(),
     });
+
+    ////remove this
+    await this.createIndex({ ownerId: 1 });
+
+    return wallet;
   }
 
   async findWalletByOwnerId(ownerId) {
@@ -27,7 +32,7 @@ class Wallet {
         $set: {
           updated_at: new Date(),
         },
-      }
+      },
     );
   }
 
@@ -39,7 +44,7 @@ class Wallet {
           ...updateData,
           updated_at: new Date(),
         },
-      }
+      },
     );
   }
 }

@@ -31,8 +31,6 @@ exports.getUserProfile = async (req, res, next) => {
       throw error;
     }
 
-    console.log(profile);
-
     res.status(200).json({
       success: true,
       message: "User profile",
@@ -42,3 +40,39 @@ exports.getUserProfile = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.wallet = async (req, res, next) => {
+  try {
+
+  const userId = new ObjectId(req.user.userId);
+    const userModel = await userfn();
+
+    const user = await userModel.findUserById(userId);
+    if (!user) {
+      const error = new Error("User not found");
+      error.status = 404;
+      error.isOperational = true;
+      throw error;
+    }
+
+     const profileWallet = await userModel.profileWallet(userId);
+
+     if (!profileWallet) {
+       const error = new Error("Profile wallet not found");
+       error.status = 404;
+       error.isOperational = true;
+       throw error;
+     }
+
+    console.log(profileWallet)
+
+     res.status(200).json({
+       success: true,
+       message: "profile wallet",
+       profileWallet,
+     });
+    
+  } catch (err) {
+    
+  }
+}

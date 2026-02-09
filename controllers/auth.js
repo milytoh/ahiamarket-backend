@@ -65,7 +65,7 @@ exports.signup = async (req, res, next) => {
       otp: otp,
       otpExpiresAt: otpExpiresAt,
       email_is_verified: false,
-      provider: "local",
+      provider: "local", 
       googleId: null,
       role: "buyer",
       is_vendor_approved: false,

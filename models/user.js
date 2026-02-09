@@ -143,20 +143,20 @@ class User {
             avatar: "$avatar",
             memberSince: "$created_at",
           },
-
+ 
           stats: {
             totalOrders: { $size: "$orders" },
             completedOrders: "$completedOrders",
             disputes: "$disputes",
-          },
+          }, 
 
           wallet: {
-            balance: { $ifNull: ["$wallet.balance", 0] },
+            balance: { $ifNull: ["$wallet.balance", 0] }, 
             currency: "USD",
           },
 
           trustScore: {
-            value: "$trustScoreValue",
+            value: "$trustScoreValue", 
             label: "$trustLabel",
             breakdown: [
               {
@@ -200,6 +200,138 @@ class User {
 
     return result[0] || null;
   }
-}
 
+  // user profile wallet 
+  async profileWallet(userId) {
+    const pipeline = [
+      //  Match logged-in user
+      {
+        $match: { _id: userId },
+      },
+
+      // Join wallet
+      {
+        $lookup: {
+          from: "wallets",
+          localField: "_id",
+          foreignField: "ownerId",
+          as: "wallet",
+        },
+      },
+      {
+        $unwind: {
+          path: "$wallet",
+          preserveNullAndEmptyArrays: true,
+        },
+      },
+
+      // 3️⃣ Join transactions
+      {
+        $lookup: {
+          from: "transactions",
+          let: { userId: "$_id" },
+          pipeline: [
+            {
+              $match: {
+                $expr: { $eq: ["$userId", "$$userId"] },
+              },
+            },
+            { $sort: { createdAt: -1 } },
+          ],
+          as: "transactions",
+        },
+      },
+
+      //  Compute wallet stats
+      {
+        $addFields: {
+          totalTransactions: { $size: "$transactions" },
+
+          successfulTransactions: {
+            $size: {
+              $filter: {
+                input: "$transactions",
+                as: "t",
+                cond: { $eq: ["$$t.status", "success"] },
+              },
+            },
+          },
+
+          pendingTransactions: {
+            $size: {
+              $filter: {
+                input: "$transactions",
+                as: "t",
+                cond: { $eq: ["$$t.status", "pending"] },
+              },
+            },
+          },
+
+          totalDeposited: {
+            $sum: {
+              $map: {
+                input: {
+                  $filter: {
+                    input: "$transactions",
+                    as: "t",
+                    cond: { $eq: ["$$t.status", "success"] },
+                  },
+                },
+                as: "t",
+                in: "$$t.amount",
+              },
+            },
+          },
+        },
+      },
+
+      // imit recent activities (last 5)
+      {
+        $addFields: {
+          recentActivities: { $slice: ["$transactions", 5] },
+        },
+      },
+
+      //  Shape final response
+      {
+        $project: {
+          _id: 0,
+
+          user: {
+            fullname: "$fullname",
+            email: "$email",
+            createdAt: "$created_at",
+          },
+
+          wallet: {
+            balance: { $ifNull: ["$wallet.balance", 0] },
+            currency: { $ifNull: ["$wallet.currency", "NGN"] },
+          },
+
+          stats: {
+            totalTransactions: "$totalTransactions",
+            successful: "$successfulTransactions",
+            pending: "$pendingTransactions",
+            totalDeposited: "$totalDeposited",
+          },
+
+          recentActivities: {
+            reference: 1,
+            type: 1,
+            amount: 1,
+            status: 1,
+            createdAt: 1,
+          },
+        },
+      },
+    ];
+  const result = await this.collection.aggregate(pipeline).toArray();
+
+  return result[0] || null;
+    
+  }
+
+
+}
+ 
 module.exports = User;
