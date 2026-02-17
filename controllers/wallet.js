@@ -32,6 +32,8 @@ exports.fundWallet = async (req, res, next) => {
   const amount = req.body.amount;
   const userId = new ObjectId(req.user.userId);
 
+  console.log(amount)
+
   const userModel = await userfn();
 
   try {
@@ -71,6 +73,7 @@ exports.fundWallet = async (req, res, next) => {
         },
       }
     );
+    
 
     res.status(200).json({
       success: true,
@@ -78,7 +81,7 @@ exports.fundWallet = async (req, res, next) => {
       data: resp.data,
     });
   } catch (error) {
-    next(error);
+    next(error); 
   } finally {
   }
 };

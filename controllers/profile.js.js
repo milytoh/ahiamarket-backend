@@ -64,7 +64,6 @@ exports.wallet = async (req, res, next) => {
        throw error;
      }
 
-    console.log(profileWallet)
 
      res.status(200).json({
        success: true,

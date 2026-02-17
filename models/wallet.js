@@ -11,7 +11,7 @@ class Wallet {
     });
 
     ////remove this
-    await this.createIndex({ ownerId: 1 });
+    // await this.createIndex({ ownerId: 1 });
 
     return wallet;
   }

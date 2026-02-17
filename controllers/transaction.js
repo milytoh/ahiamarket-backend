@@ -100,7 +100,7 @@ exports.directPayment = async (req, res, next) => {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     res.status(200).json({
@@ -117,6 +117,8 @@ exports.directPayment = async (req, res, next) => {
 exports.verificationCallback = async (req, res, next) => {
   const reference = req.query.reference;
 
+  console.log(reference);
+
   let session;
   let message;
 
@@ -128,7 +130,7 @@ exports.verificationCallback = async (req, res, next) => {
         headers: {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
         },
-      }
+      },
     );
 
     const data = verifyResp.data.data; // Paystack returns transaction details
@@ -157,18 +159,16 @@ exports.verificationCallback = async (req, res, next) => {
 
         const walletModel = await walletfn();
         const amount = data.amount / 100;
-        await walletModel.updateWallet(
+        await walletModel.updateWalletPrice(
           new ObjectId(data.metadata.userId),
-          amount
+          amount,
         );
 
         //insert new documment to transaction collection
 
-        
-
         const transData = {
           reference: data.reference,
-          type: "deposite",
+          type: "deposit",
           userId: new ObjectId(data.metadata.userId),
           amount: data.amount / 100,
           status: data.status,
@@ -193,7 +193,7 @@ exports.verificationCallback = async (req, res, next) => {
           "payment.transaction_ref": data.reference,
           order_status: "awaiting_fulfillment",
         },
-        session
+        session,
       );
 
       ///update order with same parentorderid/ update child orders
@@ -204,7 +204,7 @@ exports.verificationCallback = async (req, res, next) => {
           "payment.transaction_ref": data.reference,
           order_status: "awaiting_fulfillment",
         },
-        session
+        session,
       );
 
       //  Create payment transaction for direct checkout record
@@ -224,7 +224,7 @@ exports.verificationCallback = async (req, res, next) => {
 
       await transactionModel.createTransaction(checkoutData);
 
-      message = "checkout payment successfull"
+      message = "checkout payment successfull";
     });
 
     res.status(200).json({
@@ -278,7 +278,7 @@ exports.confirmDelivery = async (req, res, next) => {
   const { vendorOrderId } = req.params;
   const userId = req.user.userId;
 
-  const walletModel = await walletfn()
+  const walletModel = await walletfn();
   let session;
   try {
     const orderModel = await orderfn();
@@ -294,7 +294,7 @@ exports.confirmDelivery = async (req, res, next) => {
     await session.withTransaction(async () => {
       // checking if vendor order exist
       vendorOrder = await orderModel.findByVendorOrderId(
-        new ObjectId(vendorOrderId)
+        new ObjectId(vendorOrderId),
       );
 
       if (!vendorOrder) {
@@ -313,7 +313,7 @@ exports.confirmDelivery = async (req, res, next) => {
       //calculating vendor and taking 10% from total payout
       vendorGross = vendorOrder.total;
       vendorNet = Math.floor(vendorGross * 0.9); // removing 10%
-       vendor = await vendorModel.findByVendorId(vendorOrder.vendor_id);
+      vendor = await vendorModel.findByVendorId(vendorOrder.vendor_id);
 
       if (!vendor) {
         const error = new Error("Vendor not found");
@@ -328,16 +328,16 @@ exports.confirmDelivery = async (req, res, next) => {
           order_status: "delivered",
           "payment.status": "pending_payout",
         },
-        session
+        session,
       );
 
       const vendorOrdersForParent = await vendorModel.findVendorOrderByParent(
-        vendorOrder.parent_order_id
+        vendorOrder.parent_order_id,
       );
 
       // Check if all vendorOrders delivered
       const allDelivered = vendorOrdersForParent.every(
-        (vo) => vo.order_status === "delivered"
+        (vo) => vo.order_status === "delivered",
       );
 
       /// updating parentorder base on some condition
@@ -348,7 +348,7 @@ exports.confirmDelivery = async (req, res, next) => {
             order_status: "delivered",
             "payment.status": "completed",
           },
-          session
+          session,
         );
       } else {
         await parenOrderModel.updateParentOrderById(
@@ -357,20 +357,19 @@ exports.confirmDelivery = async (req, res, next) => {
             order_status: "partially_delivered",
             "payment.status": "partially_released",
           },
-          session
+          session,
         );
       }
     });
 
-   
-
     //creadit vendors wallet balance
     //update users wallet
 
-    
+    await walletModel.updateWalletPrice(
+      new ObjectId(vendor.userId),
+      vendorGross,
+    );
 
-    await walletModel.updateWalletPrice(new ObjectId(vendor.userId), vendorGross);
-    
     // update: payment + status
     await orderModel.updateVendorOrder(
       vendorOrder._id,
@@ -378,7 +377,7 @@ exports.confirmDelivery = async (req, res, next) => {
         "payment.status": "released_to_vendor",
         order_status: "completed",
       },
-      session
+      session,
     );
 
     res.status(200).json({

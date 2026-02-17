@@ -58,6 +58,7 @@ class User {
 
   //users profile
   async profile(userId) {
+    
     const pipeline = [
       { $match: { _id: userId } },
 
@@ -76,7 +77,7 @@ class User {
         $lookup: {
           from: "wallets",
           localField: "_id",
-          foreignField: "userId",
+          foreignField: "ownerId",
           as: "wallet",
         },
       },
@@ -310,8 +311,8 @@ class User {
 
           stats: {
             totalTransactions: "$totalTransactions",
-            successful: "$successfulTransactions",
-            pending: "$pendingTransactions",
+            successfulTransactions: "$successfulTransactions",
+            pendingTransactions: "$pendingTransactions",
             totalDeposited: "$totalDeposited",
           },
 
