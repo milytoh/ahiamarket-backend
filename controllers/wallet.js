@@ -141,6 +141,7 @@ exports.setPayoutDetails = async (req, res, next) => {
     if (!user) {
       const error = new Error("user not found");
       error.status = 404;
+      
       throw error;
     }
 
@@ -197,6 +198,28 @@ exports.setPayoutDetails = async (req, res, next) => {
     next(error);
   }
 };
+
+//get all nigerian bank
+exports.getBanks = async (req, res, next) => {
+  try {
+    const banks = await axios.get(
+      "https://api.paystack.co/bank?country=nigeria",
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        },
+      },
+    );
+
+    res.status(200).json({
+      success: true,
+      banks: banks.data.data,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 exports.withdraw = async (req, res, next) => {
   const userId = new ObjectId(req.user.userId);

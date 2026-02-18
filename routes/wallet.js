@@ -38,6 +38,8 @@ router.post(
   walletController.setPayoutDetails
 );
 
+router.get("/payment/banks", isAuth, walletController.getBanks)
+
 router.post(
   "/payment/wallet/withdraw",
   body("amount")
