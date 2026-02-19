@@ -32,7 +32,7 @@ exports.fundWallet = async (req, res, next) => {
   const amount = req.body.amount;
   const userId = new ObjectId(req.user.userId);
 
-  console.log(amount)
+  console.log(amount);
 
   const userModel = await userfn();
 
@@ -71,9 +71,8 @@ exports.fundWallet = async (req, res, next) => {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
-    
 
     res.status(200).json({
       success: true,
@@ -81,7 +80,7 @@ exports.fundWallet = async (req, res, next) => {
       data: resp.data,
     });
   } catch (error) {
-    next(error); 
+    next(error);
   } finally {
   }
 };
@@ -89,13 +88,15 @@ exports.fundWallet = async (req, res, next) => {
 exports.getPayoutDetails = async (req, res, next) => {
   const { accountNumber, bankCode } = req.body;
 
+  console.log(req.body);
+
   try {
     // 1. Verify account
     const resolve = await axios.get(
       `https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
       {
         headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
-      }
+      },
     );
 
     const accountName = resolve.data.data.account_name;
@@ -121,6 +122,8 @@ exports.setPayoutDetails = async (req, res, next) => {
   const userId = req.user.userId;
   const { accountNumber, bankCode } = req.body;
 
+  console.log(req.body);
+
   try {
     const userModel = await userfn();
     //checking if any field is invalid
@@ -141,7 +144,7 @@ exports.setPayoutDetails = async (req, res, next) => {
     if (!user) {
       const error = new Error("user not found");
       error.status = 404;
-      
+      error.isOperational = true;
       throw error;
     }
 
@@ -150,7 +153,7 @@ exports.setPayoutDetails = async (req, res, next) => {
       `https://api.paystack.co/bank/resolve?account_number=${accountNumber}&bank_code=${bankCode}`,
       {
         headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
-      }
+      },
     );
 
     const accountName = resolve.data.data.account_name;
@@ -178,7 +181,7 @@ exports.setPayoutDetails = async (req, res, next) => {
       },
       {
         headers: { Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}` },
-      }
+      },
     );
 
     //update user, with payment details
@@ -191,7 +194,7 @@ exports.setPayoutDetails = async (req, res, next) => {
       },
     });
 
-    res
+    res 
       .status(200)
       .json({ success: true, message: "Payout details saved successfully" });
   } catch (error) {
@@ -219,7 +222,6 @@ exports.getBanks = async (req, res, next) => {
     next(err);
   }
 };
-
 
 exports.withdraw = async (req, res, next) => {
   const userId = new ObjectId(req.user.userId);
@@ -279,9 +281,7 @@ exports.withdraw = async (req, res, next) => {
       throw error;
     }
 
-    const reference = `wd-${userId.toString()}-${
-      user._id
-    }-${Date.now()}`;
+    const reference = `wd-${userId.toString()}-${user._id}-${Date.now()}`;
 
     // Create withdrawal transaction (pending)
     const transactionData = {
@@ -300,8 +300,6 @@ exports.withdraw = async (req, res, next) => {
     //Deduct immediately from wallet (hold funds)
     await walletModel.updateWalletPrice(userId, -amount);
 
-  
-
     //Initiate Paystack Transfer
     const transfer = await axios.post(
       "https://api.paystack.co/transfer",
@@ -316,7 +314,7 @@ exports.withdraw = async (req, res, next) => {
           Authorization: `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     //update transaction with transfer response
@@ -326,15 +324,14 @@ exports.withdraw = async (req, res, next) => {
       transferId: transfer.data.data.id,
     });
 
-     res.json({
-       status: "success",
-       message: "Withdrawal initiated",
-       data: transfer.data,
-     });
-    
-    
+    res.json({
+      status: "success",
+      message: "Withdrawal initiated",
+      data: transfer.data,
+    });
+
     /////TODO: move it to webhook, and
-    
+
     // if (event === "transfer.failed") {
     //   const tx = await db
     //     .collection("transactions")
@@ -350,8 +347,6 @@ exports.withdraw = async (req, res, next) => {
     //       { $set: { status: "failed" } }
     //     );
     // }
-
-
   } catch (error) {
     next(error);
   }

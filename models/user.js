@@ -16,6 +16,7 @@ class User {
     return users;
   }
 
+
   // to find user with user id
   async findUserById(id) {
     return await this.collection.findOne({ _id: id });
@@ -58,7 +59,6 @@ class User {
 
   //users profile
   async profile(userId) {
-    
     const pipeline = [
       { $match: { _id: userId } },
 
@@ -144,20 +144,20 @@ class User {
             avatar: "$avatar",
             memberSince: "$created_at",
           },
- 
+
           stats: {
             totalOrders: { $size: "$orders" },
             completedOrders: "$completedOrders",
             disputes: "$disputes",
-          }, 
+          },
 
           wallet: {
-            balance: { $ifNull: ["$wallet.balance", 0] }, 
+            balance: { $ifNull: ["$wallet.balance", 0] },
             currency: "USD",
           },
 
           trustScore: {
-            value: "$trustScoreValue", 
+            value: "$trustScoreValue",
             label: "$trustLabel",
             breakdown: [
               {
@@ -202,7 +202,7 @@ class User {
     return result[0] || null;
   }
 
-  // user profile wallet 
+  // user profile wallet
   async profileWallet(userId) {
     const pipeline = [
       //  Match logged-in user
@@ -326,13 +326,10 @@ class User {
         },
       },
     ];
-  const result = await this.collection.aggregate(pipeline).toArray();
+    const result = await this.collection.aggregate(pipeline).toArray();
 
-  return result[0] || null;
-    
+    return result[0] || null;
   }
-
-
 }
- 
+
 module.exports = User;

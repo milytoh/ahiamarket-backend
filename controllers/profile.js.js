@@ -22,6 +22,7 @@ exports.getUserProfile = async (req, res, next) => {
       throw error;
     }
 
+
     const profile = await userModel.profile(userId);
 
     if (!profile) {

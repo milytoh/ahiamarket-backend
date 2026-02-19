@@ -77,6 +77,7 @@ exports.signup = async (req, res, next) => {
         suspended_until: null,
         updated_at: new Date(),
       },
+      bankAccounts: [],
       created_at: Date.now(),
       updated_at: Date.now(),
     };
