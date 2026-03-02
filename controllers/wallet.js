@@ -164,6 +164,8 @@ exports.setPayoutDetails = async (req, res, next) => {
       throw error;
     }
 
+    console.log(accountName);
+
     //  Create recipient
     const recipient = await axios.post(
       "https://api.paystack.co/transferrecipient",
@@ -185,16 +187,16 @@ exports.setPayoutDetails = async (req, res, next) => {
     );
 
     //update user, with payment details
-    await userModel.updateUser(user._id, {
-      bankAccount: {
-        accountNumber,
-        bankCode,
-        accountName,
-        recipientCode: recipient.data.data.recipient_code,
-      },
+    
+    await userModel.updateBankAcct(user._id, {
+      id: new ObjectId(),
+      accountNumber: "3127800800",
+      bankCode: "233",
+      accountName: "nwafor miracle",
+      recipientCode: "dlkgkglglglglglggldkdkddkd",
     });
 
-    res 
+    res
       .status(200)
       .json({ success: true, message: "Payout details saved successfully" });
   } catch (error) {

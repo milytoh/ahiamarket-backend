@@ -16,7 +16,6 @@ class User {
     return users;
   }
 
-
   // to find user with user id
   async findUserById(id) {
     return await this.collection.findOne({ _id: id });
@@ -53,6 +52,18 @@ class User {
       { _id: id },
       {
         $set: data,
+      },
+    );
+  }
+
+  //set bank account for payout
+  async updateBankAcct(userId, data) {
+    return await this.collection.updateOne(
+      { _id: userId },
+      {
+        $push: {
+          bankAccounts: data,
+        },
       },
     );
   }
@@ -301,6 +312,7 @@ class User {
           user: {
             fullname: "$fullname",
             email: "$email",
+            bankAccounts: "$bankAccounts",
             createdAt: "$created_at",
           },
 

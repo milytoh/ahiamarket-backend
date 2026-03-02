@@ -10,6 +10,7 @@ async function followerfn() {
   return new Follower(db);
 }
 
+
 async function vendorfn() {
   const { db } = await mongodbConnect();
   return new Vendor(db);

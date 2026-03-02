@@ -9,4 +9,4 @@ class Payment {
 }
 
 
-module.exports = Payment;
+module.exports = Payment; 

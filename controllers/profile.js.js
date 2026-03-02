@@ -1,4 +1,3 @@
-
 const { ObjectId } = require("mongodb");
 const mongodbConnect = require("../models/db");
 
@@ -22,7 +21,6 @@ exports.getUserProfile = async (req, res, next) => {
       throw error;
     }
 
-
     const profile = await userModel.profile(userId);
 
     if (!profile) {
@@ -44,8 +42,7 @@ exports.getUserProfile = async (req, res, next) => {
 
 exports.wallet = async (req, res, next) => {
   try {
-
-  const userId = new ObjectId(req.user.userId);
+    const userId = new ObjectId(req.user.userId);
     const userModel = await userfn();
 
     const user = await userModel.findUserById(userId);
@@ -56,23 +53,21 @@ exports.wallet = async (req, res, next) => {
       throw error;
     }
 
-     const profileWallet = await userModel.profileWallet(userId);
+    const profileWallet = await userModel.profileWallet(userId);
 
-     if (!profileWallet) {
-       const error = new Error("Profile wallet not found");
-       error.status = 404;
-       error.isOperational = true;
-       throw error;
-     }
+    if (!profileWallet) {
+      const error = new Error("Profile wallet not found");
+      error.status = 404;
+      error.isOperational = true;
+      throw error;
+    }
 
-
-     res.status(200).json({
-       success: true,
-       message: "profile wallet",
-       profileWallet,
-     });
     
-  } catch (err) {
-    
-  }
-}
+
+    res.status(200).json({
+      success: true,
+      message: "profile wallet",
+      profileWallet,
+    });
+  } catch (err) {}
+};
