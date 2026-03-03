@@ -62,7 +62,16 @@ exports.wallet = async (req, res, next) => {
       throw error;
     }
 
-    
+    // const isFirstAccount = !user.bankAccounts || user.bankAccounts.length === 0;
+
+    // await userModel.updateBankAcct(user._id, {
+    //   id: new ObjectId(),
+    //   accountNumber: "3127800800",
+    //   bankCode: "233",
+    //   accountName: "nwafor miracle",
+    //   recipientCode: "dlkgkglglglglglggldkdkddkd",
+    //   isDefault: isFirstAccount,
+    // });
 
     res.status(200).json({
       success: true,

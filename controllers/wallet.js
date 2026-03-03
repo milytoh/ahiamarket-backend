@@ -160,11 +160,10 @@ exports.setPayoutDetails = async (req, res, next) => {
 
     if (!accountName) {
       const error = new Error("no accoun found");
-      error.status = 404;
+      error.status = 404
+      isOperationalb= true
       throw error;
     }
-
-    console.log(accountName);
 
     //  Create recipient
     const recipient = await axios.post(
@@ -186,7 +185,16 @@ exports.setPayoutDetails = async (req, res, next) => {
       },
     );
 
+    if (user.bankAccounts.length >= 3) {
+      const error = new Error("max of 3 accouts need");
+      error.status = 403;
+      isOperational = true
+      throw error;
+    }
+      
+
     //update user, with payment details
+    const isFirstAccount = !user.bankAccounts || user.bankAccounts.length === 0;
     
     await userModel.updateBankAcct(user._id, {
       id: new ObjectId(),
@@ -194,6 +202,7 @@ exports.setPayoutDetails = async (req, res, next) => {
       bankCode: "233",
       accountName: "nwafor miracle",
       recipientCode: "dlkgkglglglglglggldkdkddkd",
+      default: isFirstAccount
     });
 
     res
