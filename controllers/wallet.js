@@ -160,8 +160,8 @@ exports.setPayoutDetails = async (req, res, next) => {
 
     if (!accountName) {
       const error = new Error("no accoun found");
-      error.status = 404
-      isOperationalb= true
+      error.status = 404;
+      isOperationalb = true;
       throw error;
     }
 
@@ -188,21 +188,21 @@ exports.setPayoutDetails = async (req, res, next) => {
     if (user.bankAccounts.length >= 3) {
       const error = new Error("max of 3 accouts need");
       error.status = 403;
-      isOperational = true
+      isOperational = true;
       throw error;
     }
-      
 
     //update user, with payment details
     const isFirstAccount = !user.bankAccounts || user.bankAccounts.length === 0;
-    
+
     await userModel.updateBankAcct(user._id, {
       id: new ObjectId(),
       accountNumber: "3127800800",
       bankCode: "233",
       accountName: "nwafor miracle",
       recipientCode: "dlkgkglglglglglggldkdkddkd",
-      default: isFirstAccount
+
+      default: isFirstAccount,
     });
 
     res
@@ -238,6 +238,8 @@ exports.withdraw = async (req, res, next) => {
   const userId = new ObjectId(req.user.userId);
   const amount = Math.floor(Number(req.body.amount));
 
+  console.log(amount);
+
   try {
     //checking if any field is invalid
     const result = validationResult(req);
@@ -261,18 +263,21 @@ exports.withdraw = async (req, res, next) => {
     if (!wallet) {
       const error = new Error("wallet not found");
       error.status = 404;
+      isOperational = true;
       throw error;
     }
 
     if (amount < 1000) {
       const error = new Error("withdrawal of bellow 1000 niara is not allowed");
       error.status = 409;
+      isOperational = true;
       throw error;
     }
 
     if (wallet.balance < amount) {
       const error = new Error("Insufficient balance");
       error.status = 400;
+      isOperational = true;
       throw error;
     }
 
@@ -283,12 +288,15 @@ exports.withdraw = async (req, res, next) => {
     if (!user) {
       const error = new Error("user not found");
       error.status = 404;
+      isOperational = true;
       throw error;
     }
 
-    if (!user?.bankAccount.recipientCode) {
-      const error = new Error("no withdrawal acct foun");
+    const withdrawalAcct = user.bankAccounts.filter((acct) => acct.isDefault);
+    if (!withdrawalAcct[0].recipientCode) {
+      const error = new Error("no withdrawal acct found");
       error.status = 404;
+      isOperational = true;
       throw error;
     }
 
@@ -317,7 +325,7 @@ exports.withdraw = async (req, res, next) => {
       {
         source: "balance",
         amount: amount * 100, // convert to kobo
-        recipient: user.bankAccount.recipientCode,
+        recipient: withdrawalAcct[0].recipientCode,
         reason: `Withdrawal ${transactionData.reference}`,
       },
       {
