@@ -2,10 +2,16 @@ const { ObjectId } = require("mongodb");
 const mongodbConnect = require("../models/db");
 
 const User = require("../models/user");
+const Transaction = require("../models/transaction")
 
 async function userfn() {
   const { db } = await mongodbConnect();
   return new User(db);
+}
+
+async function transactionfn() {
+  const { db } = await mongodbConnect();
+  return new Transaction(db);
 }
 
 exports.getUserProfile = async (req, res, next) => {
@@ -69,3 +75,36 @@ exports.wallet = async (req, res, next) => {
     });
   } catch (err) {}
 };
+
+exports.transactions = async(req, res, next) => {
+ 
+  const { startDate, endDate, type, page = 1, limit = 20 } = req.query;
+  
+  try {
+    const userId = new ObjectId(req.user.userId);
+    const userModel = await userfn();
+    const transactionModel = await transactionfn();
+
+    const user = await userModel.findUserById(userId);
+    if (!user) {
+      const error = new Error("User not found");
+      error.status = 404;
+      error.isOperational = true;
+      throw error;
+    }
+
+    const query = {
+      userId: req.user.id,
+    };
+
+    // Filter by transaction type
+    if (type && type !== "all") {
+      query.type = type;
+    }
+
+    await transactionModel;
+  } catch (error) {
+    
+  }
+
+}
