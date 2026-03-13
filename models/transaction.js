@@ -7,13 +7,25 @@ class Transaction {
     return await this.collection.find({}).toArray();
   }
 
-  async userTransactions(query, page, limit ) {
-    return await this.collection
-      .find()
-      .sort({ created_at: -1 })
-      .skip((page - 1) * limit)
-      .limit(Number(limit))
-      .toArray();
+  async userTransactions(query, page, limit) {
+      const skip = (page - 1) * limit;
+
+      return await Promise.all([
+        this.collection
+          .find(query)
+          .sort({ created_at: -1 })
+          .skip(skip)
+          .limit(Number(limit))
+          .toArray(),
+
+        this.collection.countDocuments(query),
+      ]);
+    // return await this.collection
+    //   .find(query)
+    //   .sort({ created_at: -1 })
+    //   .skip((page - 1) * limit)
+    //   .limit(Number(limit))
+    //   .toArray();
   }
 
   async createTransaction(transactionData) {
