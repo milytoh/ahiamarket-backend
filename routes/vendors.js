@@ -9,23 +9,23 @@ const isAuth = require("../middlewares/auth").isAuth;
 
 router.post(
   "/user/vendor-application",
-  body("storename")
+  body("storeNameIdentity")
     .notEmpty()
     .withMessage("store name should not be empty")
     .isLength({ min: 3 })
     .withMessage("store name must be upto 3 characters"),
-  body("bio")
+  body("storeBioIdentity")
     .notEmpty()
     .withMessage("bio field must not be empty")
-    .isLength({ min: 15, max: 600 })
+    .isLength({ min: 20, max: 600 })
     .withMessage(
-      "bio field must be at least 15 characters at most 600 characters"
-  ),
+      "bio field must be at least 20 characters at most 600 characters",
+    ),
   body("address").notEmpty().withMessage("provide a valid address"),
   body("state").notEmpty().withMessage("provide state field"),
   body("city").notEmpty().withMessage("city field must not be empty"),
   isAuth,
-  vendorController.vendorApplication
+  vendorController.vendorApplication,
 );
 router.post(
   "/vendor/create-product",
@@ -54,7 +54,7 @@ router.post(
   body("stock").notEmpty().withMessage("sock field must not be empty").trim(),
   body("tags").notEmpty().withMessage("must have a tag").trim(),
   isAuth,
-  vendorController.createProduct
+  vendorController.createProduct,
 );
 
 module.exports = router;

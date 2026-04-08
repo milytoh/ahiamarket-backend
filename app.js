@@ -15,9 +15,9 @@ const orderRoute = require("./routes/order");
 const cartRoute = require("./routes/cart");
 const paymentRoute = require("./routes/transaction");
 const walletRoute = require("./routes/wallet");
-const followerRoute = require("./routes/follower")
+const followerRoute = require("./routes/follower");
 const adminAuthRoute = require("./routes/admin/auth");
-const profileRoute = require("./routes/profile")
+const profileRoute = require("./routes/profile");
 const adminAdministrationRoute = require("./routes/admin/administration");
 const adminProduct = require("./routes/admin/product");
 
@@ -29,7 +29,7 @@ app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Credentials", "true");
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "OPTIONS, GET, POST, PUT, PATCH, DELETE"
+    "OPTIONS, GET, POST, PUT, PATCH, DELETE",
   );
   res.setHeader("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
@@ -40,7 +40,6 @@ app.use((req, res, next) => {
 
   next();
 });
-
 
 // app.use((req, res, next) => {
 //   res.setHeader("Access-Control-Allow-Origin", "*");
@@ -61,13 +60,11 @@ app.use("/api", orderRoute);
 app.use("/api", cartRoute);
 app.use("/api", paymentRoute);
 app.use("/api", walletRoute);
-app.use("/api", followerRoute)
+app.use("/api", followerRoute);
 app.use("/api/admin", adminAuthRoute);
 app.use("/api/admin", adminAdministrationRoute);
 app.use("/api/admin", adminProduct);
-app.use("/api/user", profileRoute)
-
-
+app.use("/api/user", profileRoute);
 
 app.use((error, req, res, next) => {
   let statusCode = error.statusCode || 500;
@@ -81,21 +78,19 @@ app.use((error, req, res, next) => {
   if (error.array && typeof error.array === "function") {
     statusCode = 400;
     message = "Invalid inputs";
-    errors = error.array().map(err => ({
+    errors = error.array().map((err) => ({
       field: err.path,
       message: err.msg,
     }));
   }
 
-  
   if (error.code === 11000) {
     statusCode = 409;
     message = "Email already exists";
   }
 
-  
   console.error(" SERVER ERROR:", error);
-  
+
   res.status(statusCode).json({
     success: false,
     message,
@@ -103,18 +98,13 @@ app.use((error, req, res, next) => {
   });
 });
 
-
 const PORT = 3000;
 
 app.listen(PORT, (err) => {
   if (err) {
-    console.log(err); 
+    console.log(err);
   }
-  console.log(`server is runing at port ${PORT}`); 
+  console.log(`server is runing at port ${PORT}`);
 });
 
 //
-
-
-
-

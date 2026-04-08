@@ -98,7 +98,7 @@ exports.vendorApprove = async (req, res, next) => {
     await vendorModel.createVendor(approvedVendor);
 
     //delete vendor from vendor application database
-    await vendorApplicationModel.deleteVendorApplicat(applicant._id);
+    // await vendorApplicationModel.deleteVendorApplicat(applicant._id);
 
     await walletModel.updateWlletByOwnerId(new ObjectId(vendorId), {
       ownerType: "vendor",

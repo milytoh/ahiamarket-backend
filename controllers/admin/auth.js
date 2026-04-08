@@ -15,21 +15,22 @@ async function adminfn() {
 exports.createAdmin = async (req, res, next) => {
   const { name, email, password, role, permissions } = req.body;
 
-  const adminId = new ObjectId(req.admin.adminId);
+  // const adminId = new ObjectId(req.admin.adminId);
 
   try {
     const adminModel = await adminfn();
 
-    const admin = await adminModel.findAdminById(adminId);
-    console.log(admin);
-    // making sure only supper admin can create admins
-    if (admin.role !== "superAdmin") {
-      const error = new Error(
-        "unauthorize access, only supper Admin can create other Admins"
-      );
-      error.status = 403;
-      throw error;
-    }
+    // const admin = await adminModel.findAdminById(adminId);
+    // console.log(admin);
+    // // making sure only supper admin can create admins
+
+    // if (admin.role !== "superAdmin") {
+    //   const error = new Error(
+    //     "unauthorize access, only supper Admin can create other Admins"
+    //   );
+    //   error.status = 403;
+    //   throw error;
+    // }
 
     // checking if email already exist on the db
     const adminEmail = await adminModel.findAdminByEmail(email);
@@ -104,7 +105,7 @@ exports.adminLogin = async (req, res, next) => {
       jwt_secret,
       {
         expiresIn: "6h",
-      }
+      },
     );
 
     res.status(200).json({
@@ -116,4 +117,3 @@ exports.adminLogin = async (req, res, next) => {
     next(error);
   }
 };
-

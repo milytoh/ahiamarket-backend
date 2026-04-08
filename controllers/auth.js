@@ -65,7 +65,7 @@ exports.signup = async (req, res, next) => {
       otp: otp,
       otpExpiresAt: otpExpiresAt,
       email_is_verified: false,
-      provider: "local", 
+      provider: "local",
       googleId: null,
       role: "buyer",
       is_vendor_approved: false,
@@ -255,22 +255,22 @@ exports.login = async (req, res, next) => {
 
     //checking if email is verified befor allowing you to login
     if (!user.email_is_verified) {
-       //generating Otp
-    const otp = generateOtp();
-    const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
+      //generating Otp
+      const otp = generateOtp();
+      const otpExpiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
-    const updateData = {
-      otp: otp,
-      otpExpiresAt: otpExpiresAt,
-    };
+      const updateData = {
+        otp: otp,
+        otpExpiresAt: otpExpiresAt,
+      };
 
-    await userModel.updateUserByEmail(user.email, updateData);
+      await userModel.updateUserByEmail(user.email, updateData);
 
-    await sendOtpEmail(email, otp);
+      await sendOtpEmail(email, otp);
 
       const err = new Error("please verify your email to continue");
       err.status = 403;
-    
+
       err.isOperational = true;
       throw err;
     }

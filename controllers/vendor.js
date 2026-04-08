@@ -11,30 +11,29 @@ async function vendorApplication() {
 }
 
 async function vendorfn() {
-   const { db } = await mongodbConnect();
+  const { db } = await mongodbConnect();
   return new Vendor(db);
 }
 
 async function productfn() {
-   const { db } = await mongodbConnect();
+  const { db } = await mongodbConnect();
   return new Product(db);
 }
 
 // vendor application
 exports.vendorApplication = async (req, res, next) => {
   const userId = req.user.userId;
-  const storeName = req.body.storename;
-  const bio = req.body.bio;
+  const storeName = req.body.storeNameIdentit;
+  const bio = req.body.storeBioIdentity;
   const address = req.body.address;
   const state = req.body.state;
-  const city = req.body.country;
+  const city = req.body.city;
 
   try {
-   
     const result = validationResult(req);
 
     //checking if any field is invalid
-    if (!result.isEmpty()) {
+    if (!result.isEmpty()) { 
       return res.status(400).json({
         success: false,
         message: "Invalid inputs",
@@ -53,9 +52,9 @@ exports.vendorApplication = async (req, res, next) => {
     // checking if applicant have already applied for a vendor
     if (vendoruser) {
       const error = new Error(
-        "this user have already applied for a vendor, wait for confirmation"
+        "this user have already applied for a vendor, wait for confirmation and approval",
       );
-      error.isOperational =true
+      error.isOperational = true;
       error.status = 409;
       throw error;
     }
@@ -65,7 +64,7 @@ exports.vendorApplication = async (req, res, next) => {
     if (vendor) {
       const error = new Error("users is already a vendor");
       error.status = 409;
-      error.isOperational = true
+      error.isOperational = true;
       throw error;
     }
 
@@ -142,7 +141,7 @@ exports.createProduct = async (req, res, next) => {
     const vendor = await vendorModel.findVendorByUserId(userId);
     if (!vendor) {
       const error = new Error(
-        "this user is not a vendor, apply for a vendor to start selling products"
+        "this user is not a vendor, apply for a vendor to start selling products",
       );
 
       error.status = 404;

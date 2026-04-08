@@ -13,19 +13,14 @@ class Transaction {
       return await Promise.all([
         this.collection
           .find(query)
-          .sort({ created_at: -1 })
+          .sort({ createdAt: -1 })
           .skip(skip)
           .limit(Number(limit))
           .toArray(),
 
         this.collection.countDocuments(query),
       ]);
-    // return await this.collection
-    //   .find(query)
-    //   .sort({ created_at: -1 })
-    //   .skip((page - 1) * limit)
-    //   .limit(Number(limit))
-    //   .toArray();
+   
   }
 
   async createTransaction(transactionData) {

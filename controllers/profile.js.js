@@ -78,10 +78,9 @@ exports.wallet = async (req, res, next) => {
 
 exports.transactions = async (req, res, next) => {
   const { startDate, endDate, type } = req.query;
+
   const page = Number(req.query.page) || 1;
   const limit = Number(req.query.limit) || 5;
-
-  console.log(req.query);
 
   try {
     const userId = new ObjectId(req.user.userId);
@@ -129,15 +128,13 @@ exports.transactions = async (req, res, next) => {
       };
     }
 
-    console.log(query);
-
     const [transactions, total] = await transactionModel.userTransactions(
       query,
       page,
       limit,
     );
 
-    console.log(transactions);
+   
 
     res.status(200).json({
       success: true,
@@ -152,3 +149,4 @@ exports.transactions = async (req, res, next) => {
     next(error);
   }
 };
+
