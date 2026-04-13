@@ -4,7 +4,7 @@ class AdminLog {
     }
 
     async createAdminLog(logData) {
-        return await this.collection.createOne(logData)
+        return await this.collection.insertOne(logData)
     }
 }
 

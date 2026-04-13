@@ -116,8 +116,10 @@ exports.directPayment = async (req, res, next) => {
 // verification of payment callback
 exports.verificationCallback = async (req, res, next) => {
   const reference = req.query.reference;
+  console.log("jjjjjjjjjjjjjjjjjj")
 
   console.log(reference);
+
 
   let session;
   let message;

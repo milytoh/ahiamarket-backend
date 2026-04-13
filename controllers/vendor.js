@@ -1,9 +1,13 @@
 const mongodbConnect = require("../models/db");
+const { ObjectId } = require("mongodb");
 
 const { validationResult } = require("express-validator");
 
 const { VendorApplication, Vendor } = require("../models/vendor");
 const Product = require("../models/product");
+
+const Wallet = require("../models/wallet");
+const { Orders, ParentOrders } = require("../models/order");
 
 async function vendorApplication() {
   const { db } = await mongodbConnect();
@@ -20,6 +24,16 @@ async function productfn() {
   return new Product(db);
 }
 
+async function walletfn() {
+  const { db } = await mongodbConnect();
+  return new Wallet(db);
+}
+
+async function orderfn() {
+  const { db } = await mongodbConnect();
+  return new Orders(db);
+}
+
 // vendor application
 exports.vendorApplication = async (req, res, next) => {
   const userId = req.user.userId;
@@ -33,7 +47,7 @@ exports.vendorApplication = async (req, res, next) => {
     const result = validationResult(req);
 
     //checking if any field is invalid
-    if (!result.isEmpty()) { 
+    if (!result.isEmpty()) {
       return res.status(400).json({
         success: false,
         message: "Invalid inputs",
@@ -175,6 +189,51 @@ exports.createProduct = async (req, res, next) => {
       message: "product created successful",
     });
   } catch (error) {
+    next(error);
+  }
+};
+
+exports.getDashboardOverview = async (req, res, next) => {
+  try {
+    const userId = req.user.userId;
+
+    const vendorModel = await vendorfn();
+    const walletModel = await walletfn();
+    const orderModel = await orderfn();
+
+    // Correct method calls based on your class methods
+    const [dashboardData, vendorProfile, wallet] = await Promise.all([
+      vendorModel.getVendorDashboardOverview(userId),
+      vendorModel.findByVendorId(userId),
+      walletModel.findWalletByOwnerId(userId),
+    ]);
+
+  
+ 
+    res.status(200).json({
+      success: true,
+      data: { 
+        vendor: vendorProfile || {},
+        wallet: {
+          balance: wallet?.balance || 0,
+          currency: wallet?.currency || "NGN",
+        },
+        stats: {
+          totalOrders: dashboardData.totalOrders || 0,
+          totalSales: dashboardData.totalSales || 0,
+          avgOrderValue: dashboardData.avgOrderValue || 0,
+          todayOrders: dashboardData.todayOrders || 0,
+          pendingOrders: dashboardData.pendingOrders || 0,
+          pendingSettlementAmount: dashboardData.pendingSettlementAmount || 0,
+        },
+        sevenDaySales: dashboardData.sevenDaySales || [],
+        recentOrders: dashboardData.recentOrders || [],
+        topProducts: dashboardData.topProducts || [],
+        podStats: dashboardData.podStats || [],
+      },
+    });
+  } catch (error) {
+    console.error("Dashboard Overview Error:", error);
     next(error);
   }
 };

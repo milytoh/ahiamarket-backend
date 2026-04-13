@@ -32,7 +32,6 @@ exports.fundWallet = async (req, res, next) => {
   const amount = req.body.amount;
   const userId = new ObjectId(req.user.userId);
 
-
   const userModel = await userfn();
 
   try {
@@ -324,7 +323,7 @@ exports.withdraw = async (req, res, next) => {
       {
         source: "balance",
         amount: amount * 100, // convert to kobo
-        recipient: withdrawalAcct[0].recipientCode,  
+        recipient: withdrawalAcct[0].recipientCode,
         reason: `Withdrawal ${transactionData.reference}`,
       },
       {

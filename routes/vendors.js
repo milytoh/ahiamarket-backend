@@ -57,4 +57,10 @@ router.post(
   vendorController.createProduct,
 );
 
+router.get(
+  "/vendor/dashboard/overview",
+  isAuth,
+  vendorController.getDashboardOverview,
+);
+
 module.exports = router;

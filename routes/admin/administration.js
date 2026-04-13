@@ -4,7 +4,7 @@ const { body } = require("express-validator");
 
 const { adminIsAuth } = require("../../middlewares/admin-auth");
 
-const adminAdminstrationController = require("../../controllers/admin/adminlstration");
+const adminAdminstrationController = require("../../controllers/admin/administration");
 
 router.post(
   "/vendors/applications/:id/approve",

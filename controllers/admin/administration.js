@@ -28,6 +28,11 @@ async function vendorfn() {
   return new Vendor(db);
 }
 
+async function vendorApplifn() {
+  const { db } = await mongodbConnect();
+  return new VendorApplication(db);
+}
+
 async function walletfn() {
   const { db } = await mongodbConnect();
   return new Wallet(db);
@@ -61,6 +66,7 @@ exports.vendorApprove = async (req, res, next) => {
   const walletModel = await walletfn();
   const adminModel = await adminfn();
   const adminLogModel = await adminlogfn();
+  const vendorApplicationModel = await vendorApplifn();
 
   try {
     //checking admin permission to approve vendor application
@@ -72,10 +78,8 @@ exports.vendorApprove = async (req, res, next) => {
     }
 
     const id = new ObjectId(vendorId);
-    const vendorApplicationModel = await vendorApplication();
-    const applicant = await vendorApplicationModel.findbVendorApplicationById(
-      id
-    );
+    const applicant =
+      await vendorApplicationModel.findbVendorApplicationById(id);
 
     // checking if application is a valid one
     if (!applicant) {
@@ -87,7 +91,7 @@ exports.vendorApprove = async (req, res, next) => {
     // updating vendor application as approved
     await vendorApplicationModel.updateVendorApplication(
       applicant._id,
-      "approved"
+      "approved",
     );
 
     const approvedVendor =
@@ -257,7 +261,9 @@ exports.chengeStatus = async (req, res, next) => {
       admin_id: adminId,
       action: "suspend a user or vendor account",
       target: { collection: "user/vendor", target_id: new ObjectId(user._id) },
-      details: { message: "user account was suspended because of illigal activities" },
+      details: {
+        message: "user account was suspended because of illigal activities",
+      },
       created_at: new Date(),
     };
     await adminLogModel.createAdminLog(log);

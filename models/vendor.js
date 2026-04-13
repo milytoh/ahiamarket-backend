@@ -26,7 +26,7 @@ class VendorApplication {
           "verification.verified_at": Date.now(),
           "verification.status": status,
         },
-      }
+      },
     );
   }
 
@@ -46,7 +46,7 @@ class Vendor extends VendorApplication {
   }
 
   async findByVendorId(id) {
-    return await this.collection.findOne({ _id: id });
+    return await this.collection.findOne({ userId: id });
   }
 
   async findVendorOrderByParent(parenOrderId) {
@@ -55,6 +55,164 @@ class Vendor extends VendorApplication {
         parent_order_id: parenOrderId,
       })
       .toArray();
+  }
+  /**
+   * Get Vendor Dashboard Overview - AGGREGATION
+   * @param {ObjectId} vendorId
+   * @returns {Promise<Object>}
+   */
+  async getVendorDashboardOverview(vendorId) {
+    const todayStart = new Date();
+    todayStart.setHours(0, 0, 0, 0);
+
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const pipeline = [
+      { $match: { userId: vendorId } },
+
+      {
+        $facet: {
+          stats: [
+            {
+              $group: {
+                _id: null,
+                totalOrders: { $sum: 1 },
+                totalSales: { $sum: "$total" },
+                avgOrderValue: { $avg: "$total" },
+                pendingOrders: {
+                  $sum: {
+                    $cond: [{ $eq: ["$order_status", "pending"] }, 1, 0],
+                  },
+                },
+                pendingSettlementAmount: {
+                  $sum: {
+                    $cond: [
+                      { $in: ["$order_status", ["pending", "processing"]] },
+                      "$total",
+                      0,
+                    ],
+                  },
+                },
+              },
+            },
+          ],
+
+          todayOrders: [
+            { $match: { created_at: { $gte: todayStart } } },
+            { $count: "count" },
+          ],
+
+          sevenDaySales: [
+            { $match: { created_at: { $gte: sevenDaysAgo } } },
+            {
+              $group: {
+                _id: {
+                  $dateToString: { format: "%Y-%m-%d", date: "$created_at" },
+                },
+                totalSales: { $sum: "$total" },
+                orderCount: { $sum: 1 },
+              },
+            },
+            { $sort: { _id: 1 } },
+          ],
+
+          recentOrders: [
+            { $sort: { created_at: -1 } },
+            { $limit: 5 },
+            {
+              $project: {
+                _id: 1,
+                total: 1,
+                order_status: 1,
+                podStatus: 1,
+                payment: 1,
+                created_at: 1,
+              },
+            },
+          ],
+
+          topProducts: [
+            { $unwind: "$products" },
+            {
+              $group: {
+                _id: "$products.productId",
+                name: { $first: "$products.name" },
+                totalSold: { $sum: "$products.quantity" },
+                revenue: {
+                  $sum: {
+                    $multiply: [
+                      "$products.priceAtPurchase",
+                      "$products.quantity",
+                    ],
+                  },
+                },
+              },
+            },
+            { $sort: { revenue: -1 } },
+            { $limit: 5 },
+          ],
+
+          ordersByStatus: [
+            {
+              $group: {
+                _id: "$order_status",
+                count: { $sum: 1 },
+                revenue: { $sum: "$total" },
+              },
+            },
+          ],
+
+          podStats: [
+            {
+              $group: {
+                _id: "$podStatus",
+                count: { $sum: 1 },
+              },
+            },
+          ],
+        },
+      },
+
+      {
+        $project: {
+          totalOrders: { $arrayElemAt: ["$stats.totalOrders", 0] },
+          totalSales: { $arrayElemAt: ["$stats.totalSales", 0] },
+          avgOrderValue: {
+            $round: [{ $arrayElemAt: ["$stats.avgOrderValue", 0] }, 0],
+          },
+          todayOrders: { $arrayElemAt: ["$todayOrders.count", 0] },
+          pendingOrders: { $arrayElemAt: ["$stats.pendingOrders", 0] },
+          pendingSettlementAmount: {
+            $arrayElemAt: ["$stats.pendingSettlementAmount", 0],
+          },
+
+          sevenDaySales: 1,
+          recentOrders: 1,
+          topProducts: 1,
+          ordersByStatus: 1,
+          podStats: 1,
+        },
+      },
+    ];
+
+    const result = await this.collection.aggregate(pipeline).toArray();
+
+    return (
+      result[0] || {
+        totalOrders: 0,
+        totalSales: 0,
+        avgOrderValue: 0,
+        todayOrders: 0,
+        pendingOrders: 0,
+        pendingSettlementAmount: 0,
+        sevenDaySales: [],
+        recentOrders: [],
+        topProducts: [],
+        ordersByStatus: [],
+        podStats: [],
+      }
+    );
   }
 }
 
