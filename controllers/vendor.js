@@ -37,11 +37,13 @@ async function orderfn() {
 // vendor application
 exports.vendorApplication = async (req, res, next) => {
   const userId = req.user.userId;
-  const storeName = req.body.storeNameIdentit;
+  const storeName = req.body.storeNameIdentity;
   const bio = req.body.storeBioIdentity;
   const address = req.body.address;
   const state = req.body.state;
   const city = req.body.city;
+
+  console.log(req.body);
 
   try {
     const result = validationResult(req);
@@ -61,10 +63,21 @@ exports.vendorApplication = async (req, res, next) => {
     const vendorModel = await vendorfn();
     const vendorApplicationModel = await vendorApplication();
 
-    const vendoruser = await vendorApplicationModel.findVendorByUserId(userId);
+    const vendorAppli = await vendorApplicationModel.findVendorByUserId(userId);
+    const aVendor = await vendorModel.findVendorByUserId(userId);
+
+    // checking if applicant already a vendor
+    if (aVendor) {
+      const error = new Error(
+        "You are already a Vendor!!, Have great sells ",
+      );
+      error.isOperational = true;
+      error.status = 409;
+      throw error;
+    }
 
     // checking if applicant have already applied for a vendor
-    if (vendoruser) {
+    if (vendorAppli) {
       const error = new Error(
         "this user have already applied for a vendor, wait for confirmation and approval",
       );
@@ -73,18 +86,12 @@ exports.vendorApplication = async (req, res, next) => {
       throw error;
     }
 
-    //checking if a already vendor want to apply again
-    const vendor = await vendorModel.findVendorByUserId(userId);
-    if (vendor) {
-      const error = new Error("users is already a vendor");
-      error.status = 409;
-      error.isOperational = true;
-      throw error;
-    }
+    
 
     const vendorData = {
       userId: userId,
       store_name: storeName,
+      category: category,
       bio: bio,
       logo_url: null,
       address: address,
@@ -208,11 +215,9 @@ exports.getDashboardOverview = async (req, res, next) => {
       walletModel.findWalletByOwnerId(userId),
     ]);
 
-  
- 
     res.status(200).json({
       success: true,
-      data: { 
+      data: {
         vendor: vendorProfile || {},
         wallet: {
           balance: wallet?.balance || 0,
