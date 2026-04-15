@@ -42,6 +42,7 @@ exports.vendorApplication = async (req, res, next) => {
   const address = req.body.address;
   const state = req.body.state;
   const city = req.body.city;
+  const category = req.body.category
 
   console.log(req.body);
 
@@ -107,7 +108,7 @@ exports.vendorApplication = async (req, res, next) => {
         total_orders: null,
         rating: null,
       },
-      verification: {
+      verification: { 
         nin: null,
         bvn: null,
         documents: [{ type: null, url: null }],
