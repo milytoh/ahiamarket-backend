@@ -29,7 +29,7 @@ router.post(
 );
 router.post(
   "/vendor/create-product",
-  body("name")
+  body("productName")
     .notEmpty()
     .withMessage("name field must not be empty")
     .isLength({ min: 3 })
@@ -38,7 +38,7 @@ router.post(
   body("description")
     .notEmpty()
     .withMessage("field must not be empty")
-    .isLength({ min: 15 })
+    .isLength({ min: 20, max: 1000})
     .withMessage("description must be 15 or more charactershb")
     .trim(),
   body("price")

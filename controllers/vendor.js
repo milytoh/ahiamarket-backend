@@ -136,6 +136,8 @@ exports.vendorApplication = async (req, res, next) => {
 exports.createProduct = async (req, res, next) => {
   const result = validationResult(req);
   const userId = req.user.userId;
+
+  console.log('jjjjjjjj')
   const { name, description, price, condition, category, stock, tags } =
     req.body;
 
@@ -165,7 +167,7 @@ exports.createProduct = async (req, res, next) => {
       const error = new Error(
         "this user is not a vendor, apply for a vendor to start selling products",
       );
-
+     isOperational = true
       error.status = 404;
       throw error;
     }
