@@ -24,6 +24,7 @@ router.post(
   body("address").notEmpty().withMessage("provide a valid address"),
   body("state").notEmpty().withMessage("provide state field"),
   body("city").notEmpty().withMessage("city field must not be empty"),
+
   isAuth,
   vendorController.vendorApplication,
 );
@@ -38,10 +39,10 @@ router.post(
   body("description")
     .notEmpty()
     .withMessage("field must not be empty")
-    .isLength({ min: 20, max: 1000})
+    .isLength({ min: 20, max: 1000 })
     .withMessage("description must be 15 or more charactershb")
     .trim(),
-  body("price")
+  body("unitPrice")
     .notEmpty()
     .withMessage("must not be empty")
     .isNumeric("must be number")
@@ -52,7 +53,32 @@ router.post(
     .withMessage("category field must not be empty ")
     .trim(),
   body("stock").notEmpty().withMessage("sock field must not be empty").trim(),
-  body("tags").notEmpty().withMessage("must have a tag").trim(),
+  // body("tags").notEmpty().withMessage("must have a tag").trim(),
+  body("podEnabled")
+    .isBoolean()
+    .withMessage("paid on delivery must be a boolean"),
+  body("images").custom((_, { req }) => {
+    const files = req.files;
+
+    if (!files || files.length === 0) {
+      throw new Error("Please upload at least one image.");
+    }
+
+    if (files.length > 3) {
+      throw new Error("You can only upload a maximum of 3 images.");
+    }
+
+    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
+    const invalidFiles = files.filter(
+      (file) => !allowedTypes.includes(file.mimetype),
+    );
+
+    if (invalidFiles.length > 0) {
+      throw new Error("Only JPG, PNG, or WEBP images are allowed.");
+    }
+
+    return true;
+  }),
   isAuth,
   vendorController.createProduct,
 );
