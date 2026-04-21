@@ -42,7 +42,7 @@ exports.vendorApplication = async (req, res, next) => {
   const address = req.body.address;
   const state = req.body.state;
   const city = req.body.city;
-  const category = req.body.category
+  const category = req.body.category;
 
   console.log(req.body);
 
@@ -69,9 +69,7 @@ exports.vendorApplication = async (req, res, next) => {
 
     // checking if applicant already a vendor
     if (aVendor) {
-      const error = new Error(
-        "You are already a Vendor!!, Have great sells ",
-      );
+      const error = new Error("You are already a Vendor!!, Have great sells ");
       error.isOperational = true;
       error.status = 409;
       throw error;
@@ -86,8 +84,6 @@ exports.vendorApplication = async (req, res, next) => {
       error.status = 409;
       throw error;
     }
-
-    
 
     const vendorData = {
       userId: userId,
@@ -108,7 +104,7 @@ exports.vendorApplication = async (req, res, next) => {
         total_orders: null,
         rating: null,
       },
-      verification: { 
+      verification: {
         nin: null,
         bvn: null,
         documents: [{ type: null, url: null }],
@@ -137,7 +133,7 @@ exports.createProduct = async (req, res, next) => {
   const result = validationResult(req);
   const userId = req.user.userId;
 
-  console.log('jjjjjjjj')
+  console.log("jjjjjjjj");
   const { name, description, price, condition, category, stock, tags } =
     req.body;
 
@@ -167,7 +163,7 @@ exports.createProduct = async (req, res, next) => {
       const error = new Error(
         "this user is not a vendor, apply for a vendor to start selling products",
       );
-     isOperational = true
+      isOperational = true;
       error.status = 404;
       throw error;
     }
