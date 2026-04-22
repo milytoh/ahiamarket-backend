@@ -3,9 +3,10 @@ const express = require("express");
 const { body } = require("express-validator");
 
 const router = express.Router();
-
 const vendorController = require("../controllers/vendor");
 const isAuth = require("../middlewares/auth").isAuth;
+const upload = require("../middlewares/upload");
+const validateImages = require("../utils/productValidateImages");
 
 router.post(
   "/user/vendor-application",
@@ -30,6 +31,7 @@ router.post(
 );
 router.post(
   "/vendor/create-product",
+  upload.array("images", 3),
   body("productName")
     .notEmpty()
     .withMessage("name field must not be empty")
@@ -57,28 +59,32 @@ router.post(
   body("podEnabled")
     .isBoolean()
     .withMessage("paid on delivery must be a boolean"),
-  body("images").custom((_, { req }) => {
-    const files = req.files;
+  validateImages,
+  // body("images").custom((_, { req }) => {
+  //   const files = req.files;
 
-    if (!files || files.length === 0) {
-      throw new Error("Please upload at least one image.");
-    }
+  //   console.log(files)
 
-    if (files.length > 3) {
-      throw new Error("You can only upload a maximum of 3 images.");
-    }
+  //   if (!files || files.length === 0) {
+  //     throw new Error("Please upload at least one image.");
+  //   }
 
-    const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
-    const invalidFiles = files.filter(
-      (file) => !allowedTypes.includes(file.mimetype),
-    );
+  //   if (files.length > 3) {
+  //     throw new Error("Maximum 3 images allowed.");
+  //   }
 
-    if (invalidFiles.length > 0) {
-      throw new Error("Only JPG, PNG, or WEBP images are allowed.");
-    }
+  //   const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
 
-    return true;
-  }),
+  //   const invalidFiles = files.filter(
+  //     (file) => !allowedTypes.includes(file.mimetype),
+  //   );
+
+  //   if (invalidFiles.length > 0) {
+  //     throw new Error("Only JPG, PNG, or WEBP allowed.");
+  //   }
+
+  //   return true;
+  // }),
   isAuth,
   vendorController.createProduct,
 );

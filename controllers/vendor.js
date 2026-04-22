@@ -133,7 +133,6 @@ exports.createProduct = async (req, res, next) => {
   const result = validationResult(req);
   const userId = req.user.userId;
 
-  console.log("jjjjjjjj");
   const { name, description, price, condition, category, stock, tags } =
     req.body;
 
@@ -142,6 +141,7 @@ exports.createProduct = async (req, res, next) => {
   const formattedstock = parseInt(stock);
 
   console.log(req.body);
+  console.log(req.files);
 
   //checking if any field is invalid
   if (!result.isEmpty()) {

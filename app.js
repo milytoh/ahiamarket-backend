@@ -23,6 +23,8 @@ const adminProduct = require("./routes/admin/product");
 
 app.use(express.json());
 
+app.use("/uploads", require("express").static("uploads"));
+
 //enables your Express server to accept cross-origin requests from the frontend
 app.use((req, res, next) => {
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
