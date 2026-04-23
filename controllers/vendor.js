@@ -133,22 +133,29 @@ exports.createProduct = async (req, res, next) => {
   const result = validationResult(req);
   const userId = req.user.userId;
 
-  const { name, description, price, condition, category, stock, tags } =
-    req.body;
+  const {
+    name,
+    description,
+    unitPrice,
+    condition,
+    category,
+    stock,
+    tags,
+    podEnabled: pod,
+  } = req.body;
 
-  const formattedPrice = parseFloat(parseFloat(price).toFixed(2));
+  const formattedPrice = parseFloat(parseFloat(unitPrice).toFixed(2));
 
   const formattedstock = parseInt(stock);
 
-  console.log(req.body);
-  console.log(req.files);
+  const images = req.files.map((file) => file.filename);
 
   //checking if any field is invalid
   if (!result.isEmpty()) {
     return res.status(400).json({
       success: false,
       message: "Invalid inputs",
-      error: result.array().map((err) => ({ 
+      error: result.array().map((err) => ({
         field: err.path,
         errMessage: err.msg,
       })),
@@ -171,17 +178,18 @@ exports.createProduct = async (req, res, next) => {
     }
 
     const productData = {
-      vendorId: vendor._id,
+      vendorId: userId,
       name: name,
       description: description,
       price: formattedPrice,
       currency: "NGN",
       category: category,
       condition: condition,
-      images: null, //[String], // URLs
+      images: images,
       stock: formattedstock,
       status: "active",
       tags: tags,
+      pod: pod,
       rating: {
         average: null,
         count: null,

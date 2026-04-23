@@ -2,15 +2,18 @@ const validateImages = (req, res, next) => {
   const files = req.files;
 
   if (!files || files.length === 0) {
-    return res.status(400).json({
-      message: "Please upload at least one image.",
-    });
+    const err = new Error("Please upload at least one image.");
+    err.statusCode = 400;
+    err.isOperational = true;
+
+    return next(err);
   }
 
   if (files.length > 3) {
-    return res.status(400).json({
-      message: "Maximum of 3 images allowed.",
-    });
+    const err = new Error("Maximum of 3 images allowed.");
+    err.statusCode = 400;
+    err.isOperational = true;
+    return next(err);
   }
 
   const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
@@ -20,9 +23,10 @@ const validateImages = (req, res, next) => {
   );
 
   if (invalidFiles.length > 0) {
-    return res.status(400).json({
-      message: "Only JPG, PNG, or WEBP images allowed.",
-    });
+    const err = new Error("Only JPG, PNG, or WEBP images allowed.");
+    err.statusCode = 400;
+    err.isOperational = true;
+    return next(err);
   }
 
   next();

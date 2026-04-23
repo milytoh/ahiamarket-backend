@@ -5,12 +5,12 @@ const Product = require("../models/product");
 const { Vendor } = require("../models/vendor");
 
 async function productfn() {
-   const { db } = await mongodbConnect();
+  const { db } = await mongodbConnect();
   return new Product(db);
 }
 
 async function vendorfn() {
-   const { db } = await mongodbConnect();
+  const { db } = await mongodbConnect();
   return new Vendor(db);
 }
 
@@ -24,6 +24,42 @@ exports.allProducts = async (req, res, next) => {
       message: "all products",
       success: true,
       productData: [{ name: "car", price: 300 }],
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.vendorProducts = async (req, res, next) => {
+  const userId = new ObjectId(req.user.userId);
+  const vendorModel = await vendorfn();
+  const productModel = await productfn();
+
+  try {
+    // to check if a users is a vendor
+    const vendor = await vendorModel.findVendorByUserId(userId);
+    if (!vendor) {
+      const error = new Error(
+        "this user is not a vendor, apply for a vendor to start selling products",
+      );
+      isOperational = true;
+      error.status = 404;
+      throw error;
+    }
+
+    const products = await productModel.findProductsByVendorId(vendor._id);
+
+    if (products.length === 0) {
+      const err = new Error("no products found for this vendor");
+      err.status = 404;
+      err.isOperational = true;
+      throw err;
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "vendor products",
+      products,
     });
   } catch (err) {
     next(err);

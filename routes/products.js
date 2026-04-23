@@ -10,6 +10,7 @@ router.get("/product/:id/details", isAuth, productsController.productDetails);
 router.delete("/product/:id/delete", isAuth, productsController.deleteProduct);
 router.get("/product/:id/update", isAuth, productsController.getUpdateProduct);
 router.patch("/product/:id/update", isAuth, productsController.updateProduct);
+router.get("/vendor/products", isAuth, productsController.vendorProducts);
 
 module.exports = router;
   

@@ -13,6 +13,10 @@ class Product {
     }).toArray();
   }
 
+  async findProductsByVendorId(vendorId) {
+    return await this.collection.find({ vendorId: vendorId }).toArray();
+  }
+
   async findProductById(id) {
     return await this.collection.findOne({ _id: id });
   }
