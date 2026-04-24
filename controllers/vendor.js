@@ -134,7 +134,7 @@ exports.createProduct = async (req, res, next) => {
   const userId = req.user.userId;
 
   const {
-    name,
+    productName: name,
     description,
     unitPrice,
     condition,

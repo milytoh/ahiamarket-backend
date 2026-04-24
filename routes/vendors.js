@@ -57,6 +57,7 @@ router.post(
   body("stock").notEmpty().withMessage("sock field must not be empty").trim(),
   // body("tags").notEmpty().withMessage("must have a tag").trim(),
   body("podEnabled")
+    .toBoolean()
     .isBoolean()
     .withMessage("paid on delivery must be a boolean"),
   validateImages,

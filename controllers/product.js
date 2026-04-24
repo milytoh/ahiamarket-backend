@@ -31,13 +31,19 @@ exports.allProducts = async (req, res, next) => {
 };
 
 exports.vendorProducts = async (req, res, next) => {
-  const userId = new ObjectId(req.user.userId);
+  const userId = req.user.userId;
   const vendorModel = await vendorfn();
   const productModel = await productfn();
+
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+
+  const skip = (page - 1) * limit;
 
   try {
     // to check if a users is a vendor
     const vendor = await vendorModel.findVendorByUserId(userId);
+
     if (!vendor) {
       const error = new Error(
         "this user is not a vendor, apply for a vendor to start selling products",
@@ -47,7 +53,8 @@ exports.vendorProducts = async (req, res, next) => {
       throw error;
     }
 
-    const products = await productModel.findProductsByVendorId(vendor._id);
+    const { products, totalProducts } =
+      await productModel.findProductsByVendorId(vendor.userId, skip, limit);
 
     if (products.length === 0) {
       const err = new Error("no products found for this vendor");
@@ -60,6 +67,9 @@ exports.vendorProducts = async (req, res, next) => {
       success: true,
       message: "vendor products",
       products,
+      totalPages: Math.ceil(totalProducts / limit),
+      currentPage: page,
+      total: totalProducts,
     });
   } catch (err) {
     next(err);

@@ -13,8 +13,14 @@ class Product {
     }).toArray();
   }
 
-  async findProductsByVendorId(vendorId) {
-    return await this.collection.find({ vendorId: vendorId }).toArray();
+  async findProductsByVendorId(vendorId, skip, limit) {
+    const products = await this.collection
+      .find({ vendorId: vendorId })
+      .skip(skip)
+      .limit(limit)
+      .toArray();
+    const totalProducts = await this.collection.countDocuments({ vendorId: vendorId });
+    return { products, totalProducts };
   }
 
   async findProductById(id) {
