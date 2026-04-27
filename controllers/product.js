@@ -35,19 +35,15 @@ exports.vendorProducts = async (req, res, next) => {
   const vendorModel = await vendorfn();
   const productModel = await productfn();
 
- 
-    const {
-      page = 1,
-      limit = 10,
-      status,
-      category,
-      startDate,
-      endDate,
-    } = req.query;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const status = req.query.status
+  const category = req.query.category;
+  const startDate = req.query.startDate;
+  const endDate = req.query.endDate 
+
 
   const skip = (page - 1) * limit;
-
-  console.log(req.query)
 
   try {
     // to check if a users is a vendor
@@ -63,7 +59,7 @@ exports.vendorProducts = async (req, res, next) => {
     }
 
     const { products, totalProducts } =
-      await productModel.findProductsByVendorId(vendor.userId, skip, limit, filters: { status, category, startDate, endDate },);
+      await productModel.findProductsByVendorId(vendor.userId, skip, limit, { status, category, startDate, endDate });
 
     if (products.length === 0) {
       const err = new Error("no products found for this vendor");

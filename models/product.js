@@ -13,9 +13,35 @@ class Product {
     }).toArray();
   }
 
-  async findProductsByVendorId(vendorId, skip, limit) {
+
+  async findProductsByVendorId(vendorId, skip, limit, filters) {
+       const query = { vendorId };
+
+       console.log( limit, filters)
+
+  if (filters.status) {
+    query.status = filters.status;
+  }
+
+  if (filters.category) {
+    query.category = filters.category;
+  }
+
+
+  if (filters.startDate || filters.endDate) {
+    query.created_at = {};
+
+    if (filters.startDate) {
+      query.created_at.$gte = new Date(filters.startDate);
+    }
+
+    if (filters.endDate) {
+      query.created_at.$lte = new Date(filters.endDate);
+    }
+  }
+
     const products = await this.collection
-      .find({ vendorId: vendorId })
+      .find(query)
       .skip(skip)
       .limit(limit)
       .toArray();
