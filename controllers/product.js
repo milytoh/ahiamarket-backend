@@ -61,18 +61,11 @@ exports.vendorProducts = async (req, res, next) => {
     const { products, totalProducts } =
       await productModel.findProductsByVendorId(vendor.userId, skip, limit, { status, category, startDate, endDate });
 
-    if (products.length === 0) {
-      const err = new Error("no products found for this vendor");
-      err.status = 404;
-      err.isOperational = true;
-      throw err;
-    }
-
     res.status(200).json({
       success: true,
       message: "vendor products",
       products,
-      totalPages: Math.ceil(totalProducts / limit),
+      totalPages: Math.ceil(totalProducts / limit), 
       currentPage: page,
       total: totalProducts,
     });
