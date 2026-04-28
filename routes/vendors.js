@@ -78,4 +78,8 @@ router.patch(
   vendorController.podUpdate,
 );
 
+router.patch("/vendor/product/visible/update", isAuth, vendorController.visibleUpdate);
+
+
+
 module.exports = router;

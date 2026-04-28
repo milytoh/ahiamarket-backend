@@ -92,7 +92,7 @@ class Product {
   async visibleUpdate(id, visible) {
     return await this.collection.updateOne(
       {
-        _id: id,
+        $and: [{ _id: id }, { vendorId: vendorId }],
       },
       {
         $set: { visible: visible },

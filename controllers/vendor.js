@@ -277,3 +277,24 @@ exports.podUpdate = async (req, res, next) => {
     next(error);
   }
 };
+
+exports.visibleUpdate = async (req, res, next) => {
+  try {
+    const vendorId = req.user.userId;
+
+    const prodId = new ObjectId(req.body.id);
+
+   const visible = JSON.parse(req.body.visible);
+
+    const productModel = await productfn();
+
+    await productModel.visibleUpdate(prodId, visible, vendorId);
+
+    res.status(200).json({
+      success: true,
+      message: "visibility  status updated successfully",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
