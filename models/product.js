@@ -89,7 +89,7 @@ class Product {
     );
   }
 
-  async visibleUpdate(id, visible) {
+  async visibleUpdate(id, visible, vendorId) {
     return await this.collection.updateOne(
       {
         $and: [{ _id: id }, { vendorId: vendorId }],

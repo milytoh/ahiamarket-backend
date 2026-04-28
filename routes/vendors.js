@@ -72,14 +72,12 @@ router.get(
   vendorController.getDashboardOverview,
 );
 
+router.patch("/vendor/product/pod/update", isAuth, vendorController.podUpdate);
+
 router.patch(
-  "/vendor/product/pod/update",
+  "/vendor/product/visible/update",
   isAuth,
-  vendorController.podUpdate,
+  vendorController.visibleUpdate,
 );
-
-router.patch("/vendor/product/visible/update", isAuth, vendorController.visibleUpdate);
-
-
 
 module.exports = router;
