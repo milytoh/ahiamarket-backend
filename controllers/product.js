@@ -223,6 +223,7 @@ exports.updateProduct = async (req, res, next) => {
       images: null, //[String], // URLs
       stock: formattedstock,
       status: "active",
+      visible: true,
       tags: tags,
       rating: {
         average: null,

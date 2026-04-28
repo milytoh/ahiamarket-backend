@@ -4,48 +4,49 @@ class Product {
   }
 
   async createProduct(productData) {
-    await this.collection.insertOne(productData)
+    await this.collection.insertOne(productData);
   }
 
   async findAllProducts(idArray) {
-    return await this.collection.find({
-      _id: {$in: [idArray]}
-    }).toArray();
+    return await this.collection
+      .find({
+        _id: { $in: [idArray] },
+      })
+      .toArray();
   }
 
-
+  //
   async findProductsByVendorId(vendorId, skip, limit, filters) {
-       const query = { vendorId };
+    const query = { vendorId };
 
-       console.log( limit, filters)
-
-  if (filters.status) {
-    query.status = filters.status;
-  }
-
-  if (filters.category) {
-    query.category = filters.category;
-  }
-
-
-  if (filters.startDate || filters.endDate) {
-    query.created_at = {};
-
-    if (filters.startDate) {
-      query.created_at.$gte = new Date(filters.startDate);
+    if (filters.status) {
+      query.status = filters.status;
     }
 
-    if (filters.endDate) {
-      query.created_at.$lte = new Date(filters.endDate);
+    if (filters.category) {
+      query.category = filters.category;
     }
-  }
+
+    if (filters.startDate || filters.endDate) {
+      query.created_at = {};
+
+      if (filters.startDate) {
+        query.created_at.$gte = new Date(filters.startDate);
+      }
+
+      if (filters.endDate) {
+        query.created_at.$lte = new Date(filters.endDate);
+      }
+    }
 
     const products = await this.collection
       .find(query)
       .skip(skip)
       .limit(limit)
       .toArray();
-    const totalProducts = await this.collection.countDocuments({ vendorId: vendorId });
+    const totalProducts = await this.collection.countDocuments({
+      vendorId: vendorId,
+    });
     return { products, totalProducts };
   }
 
@@ -64,7 +65,7 @@ class Product {
       },
       {
         $set: updatedProductData,
-      }
+      },
     );
   }
 
@@ -74,6 +75,29 @@ class Product {
         _id: { $in: [...id] },
       })
       .toArray();
+  }
+
+  async podUpdate(id, pod, vendorId) {
+   ;
+    return await this.collection.updateOne(
+      {
+        $and: [{ _id: id }, { vendorId: vendorId }],
+      },
+      {
+        $set: { pod: pod },
+      },
+    );
+  }
+
+  async visibleUpdate(id, visible) {
+    return await this.collection.updateOne(
+      {
+        _id: id,
+      },
+      {
+        $set: { visible: visible },
+      },
+    );
   }
 }
 

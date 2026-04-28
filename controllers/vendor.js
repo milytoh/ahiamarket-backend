@@ -44,8 +44,6 @@ exports.vendorApplication = async (req, res, next) => {
   const city = req.body.city;
   const category = req.body.category;
 
-  console.log(req.body);
-
   try {
     const result = validationResult(req);
 
@@ -248,6 +246,34 @@ exports.getDashboardOverview = async (req, res, next) => {
     });
   } catch (error) {
     console.error("Dashboard Overview Error:", error);
+    next(error);
+  }
+};
+
+exports.podUpdate = async (req, res, next) => {
+  try {
+    const vendorId = req.user.userId;
+
+    const prodId = new ObjectId(req.body.id);
+
+    // let visible;
+    // let pod;
+
+    // if (req.body.visible) {
+    //   visible = JSON.parse(req.body.visible);
+    // }
+
+    const pod = JSON.parse(req.body.pod);
+
+    const productModel = await productfn();
+
+    await productModel.podUpdate(prodId, pod, vendorId);
+
+    res.status(200).json({
+      success: true,
+      message: "POD  status updated successfully",
+    });
+  } catch (error) {
     next(error);
   }
 };
