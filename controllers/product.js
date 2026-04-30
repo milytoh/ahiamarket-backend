@@ -3,6 +3,7 @@ const { ObjectId } = require("mongodb");
 const mongodbConnect = require("../models/db");
 const Product = require("../models/product");
 const { Vendor } = require("../models/vendor");
+const { validationResult } = require("express-validator");
 
 async function productfn() {
   const { db } = await mongodbConnect();
@@ -178,16 +179,39 @@ exports.getUpdateProduct = async (req, res, next) => {
 };
 
 exports.updateProduct = async (req, res, next) => {
+  const result = validationResult(req);
   const userId = req.user.userId;
-  const productId = new ObjectId(req.params.id);
-  const { name, description, price, condition, category, stock, tags } =
-    req.body;
+  const productId  = new ObjectId(req.params.id);
 
-  const formattedPrice = parseFloat(parseFloat(price).toFixed(2));
+  console.log("product id", productId);
+  const {
+    productName: name,
+    description,
+    unitPrice,
+    condition,
+    category,
+    stock,
+    tags,
+    podEnabled: pod,
+    existingImages,
+  } = req.body;
+
+  const formattedPrice = parseFloat(parseFloat(unitPrice).toFixed(2));
 
   const formattedstock = parseInt(stock);
 
-  console.log(req.body);
+ const newImages = req.files?.map((file) => file.filename) || [];
+
+ let finalImages = [];
+
+ if (existingImages) {
+   finalImages = JSON.parse(existingImages); 
+ }
+
+ finalImages = [...finalImages, ...newImages];
+
+
+
 
   //checking if any field is invalid
   if (!result.isEmpty()) {
@@ -207,14 +231,15 @@ exports.updateProduct = async (req, res, next) => {
 
     // to check if a users is a vendor before creating a product
     const vendor = await vendorModel.findVendorByUserId(userId);
+    console.log("vendor", vendor);
     if (!vendor) {
       const error = new Error("this user is not a vendor, apply for a vendor ");
-
+      error.isOperational = true;
       error.status = 404;
       throw error;
     }
     const product = await productModel.findProductById(productId);
-    if (product.vendorId.toString() !== vendor._id.toString()) {
+    if (product.vendorId.toString() !== userId.toString()) {
       const error = new Error("you can't update this product");
       error.isOperational = true;
       error.status = 401;
@@ -222,27 +247,36 @@ exports.updateProduct = async (req, res, next) => {
     }
 
     const updateProductData = {
-      vendorId: vendor._id,
+      vendorId: userId,
       name: name,
       description: description,
       price: formattedPrice,
-      currency: "NGN",
       category: category,
       condition: condition,
-      images: null, //[String], // URLs
+      images: finalImages,
       stock: formattedstock,
-      status: "active",
-      visible: true,
       tags: tags,
-      rating: {
-        average: null,
-        count: null,
-      },
-
+      pod: pod,
       updated_at: Date.now(),
     };
 
-    await productModel.updateProduct(productId, vendor._id, updateProductData);
+     await productModel.updateProduct(
+      productId,
+      vendor.userId,
+      updateProductData,
+    );
+
+
+    const oldImagesFromDB = product.images;
+    const removedImages = oldImagesFromDB.filter(
+      (img) => !existingImages.includes(img),
+    );
+
+    // delete from disk
+    removedImages.forEach((img) => {
+      fs.unlinkSync(`uploads/products/${img}`);
+    });
+   
 
     res.status(201).json({
       success: true,

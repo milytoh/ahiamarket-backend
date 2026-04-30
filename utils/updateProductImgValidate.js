@@ -6,11 +6,12 @@ const validateImages = (req, res, next) => {
 
  if (totalImages === 0) {
    const err = new Error("At least 1 image is required");
-   err.status = 400;
-   throw err;
+     err.status = 400;
+      err.isOperational = true;
+    return next(err);
  }
 
-  if (files.length > 3) {
+  if (totalImages > 3) {
     const err = new Error("Maximum of 3 images allowed.");
     err.statusCode = 400;
     err.isOperational = true;
@@ -19,7 +20,7 @@ const validateImages = (req, res, next) => {
 
   const allowedTypes = ["image/jpeg", "image/png", "image/jpg", "image/webp"];
 
-  const invalidFiles = files.filter(
+  const invalidFiles = req.files.filter(
     (file) => !allowedTypes.includes(file.mimetype),
   );
 

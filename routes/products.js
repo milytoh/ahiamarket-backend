@@ -5,7 +5,7 @@ const router = express.Router();
 const { isAuth } = require("../middlewares/auth");
 const productsController = require("../controllers/product");
 const upload = require("../middlewares/upload");
-const validateImages = require("../utils/productValidateImages");
+const validateUpdateImages = require("../utils/updateProductImgValidate");
 
 router.get("/products", isAuth, productsController.allProducts);
 router.get("/product/:id/details", isAuth, productsController.productDetails);
@@ -46,7 +46,7 @@ router.put(
     .toBoolean()
     .isBoolean()
     .withMessage("paid on delivery must be a boolean"),
-  validateImages,
+  validateUpdateImages,
   isAuth,
   productsController.updateProduct,
 );

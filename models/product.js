@@ -78,7 +78,7 @@ class Product {
   }
 
   async podUpdate(id, pod, vendorId) {
-   ;
+   
     return await this.collection.updateOne(
       {
         $and: [{ _id: id }, { vendorId: vendorId }],
