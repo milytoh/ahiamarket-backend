@@ -37,11 +37,10 @@ exports.vendorProducts = async (req, res, next) => {
 
   const page = parseInt(req.query.page) || 1;
   const limit = parseInt(req.query.limit) || 10;
-  const status = req.query.status
+  const status = req.query.status;
   const category = req.query.category;
   const startDate = req.query.startDate;
-  const endDate = req.query.endDate 
-
+  const endDate = req.query.endDate;
 
   const skip = (page - 1) * limit;
 
@@ -59,19 +58,24 @@ exports.vendorProducts = async (req, res, next) => {
     }
 
     const { products, totalProducts } =
-      await productModel.findProductsByVendorId(vendor.userId, skip, limit, { status, category, startDate, endDate });
+      await productModel.findProductsByVendorId(vendor.userId, skip, limit, {
+        status,
+        category,
+        startDate,
+        endDate,
+      });
 
     res.status(200).json({
       success: true,
       message: "vendor products",
       products,
-      totalPages: Math.ceil(totalProducts / limit), 
+      totalPages: Math.ceil(totalProducts / limit),
       currentPage: page,
       total: totalProducts,
     });
-  } catch (err) { 
+  } catch (err) {
     next(err);
-  } 
+  }
 };
 
 exports.productDetails = async (req, res, next) => {
@@ -141,6 +145,7 @@ exports.deleteProduct = async (req, res, next) => {
 exports.getUpdateProduct = async (req, res, next) => {
   const productId = new ObjectId(req.params.id);
   const userId = req.user.userId;
+
   try {
     //checking if someon is a vendor before deleting a product
     const vendorModel = await vendorfn();
@@ -155,9 +160,10 @@ exports.getUpdateProduct = async (req, res, next) => {
     const productModel = await productfn();
     const product = await productModel.findProductById(productId);
 
-    if (product.vendorId.toString() !== vendor._id.toString()) {
+    if (product.vendorId.toString() !== vendor.userId.toString()) {
       const error = new Error("you can only edit your own product");
       error.status = 401;
+      error.isOperational = true;
       throw error;
     }
 
@@ -180,6 +186,8 @@ exports.updateProduct = async (req, res, next) => {
   const formattedPrice = parseFloat(parseFloat(price).toFixed(2));
 
   const formattedstock = parseInt(stock);
+
+  console.log(req.body);
 
   //checking if any field is invalid
   if (!result.isEmpty()) {
@@ -208,6 +216,7 @@ exports.updateProduct = async (req, res, next) => {
     const product = await productModel.findProductById(productId);
     if (product.vendorId.toString() !== vendor._id.toString()) {
       const error = new Error("you can't update this product");
+      error.isOperational = true;
       error.status = 401;
       throw error;
     }

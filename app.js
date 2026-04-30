@@ -23,7 +23,7 @@ const adminProduct = require("./routes/admin/product");
 
 app.use(express.json());
 
-app.use("/uploads", require("express").static("uploads"));
+app.use("/api/uploads", require("express").static("uploads"));
 
 //enables your Express server to accept cross-origin requests from the frontend
 app.use((req, res, next) => {

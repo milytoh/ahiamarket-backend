@@ -256,13 +256,6 @@ exports.podUpdate = async (req, res, next) => {
 
     const prodId = new ObjectId(req.body.id);
 
-    // let visible;
-    // let pod;
-
-    // if (req.body.visible) {
-    //   visible = JSON.parse(req.body.visible);
-    // }
-
     const pod = JSON.parse(req.body.pod);
 
     const productModel = await productfn();
