@@ -267,16 +267,15 @@ exports.updateProduct = async (req, res, next) => {
     );
 
 
-    const oldImagesFromDB = product.images;
-    const removedImages = oldImagesFromDB.filter(
-      (img) => !existingImages.includes(img),
-    );
+  const oldImagesFromDB = product.images;
+  const removedImages = oldImagesFromDB.filter(
+    (img) => !existingImages.includes(img),
+  );
 
-    // delete from disk
-    removedImages.forEach((img) => {
-      fs.unlinkSync(`uploads/products/${img}`);
-    });
-   
+  // delete from disk
+  removedImages.forEach((img) => {
+    fs.unlinkSync(`uploads/products/${img}`);
+  });
 
     res.status(201).json({
       success: true,
