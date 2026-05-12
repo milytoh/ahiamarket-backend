@@ -104,6 +104,8 @@ exports.productDetails = async (req, res, next) => {
 };
 
 exports.deleteProduct = async (req, res, next) => {
+  const fs = require("fs");
+  const path = require("path");
   const productId = new ObjectId(req.params.id);
   const userId = req.user.userId;
   try {
@@ -128,6 +130,16 @@ exports.deleteProduct = async (req, res, next) => {
       throw error;
     }
 
+    if (product.images && product.images.length > 0) {
+      product.images.forEach((image) => {
+        const imagePath = path.join(__dirname, "../uploads/products", image);
+
+        if (fs.existsSync(imagePath)) {
+          fs.unlinkSync(imagePath);
+        }
+      });
+    }
+
     const request = await productModel.deleteProductById(productId, userId);
 
     if (request.countDelete <= 0) {
@@ -137,7 +149,7 @@ exports.deleteProduct = async (req, res, next) => {
       throw error;
     }
 
-    res.status(200).json({ 
+    res.status(200).json({
       success: true,
       message: "product deleted",
     });

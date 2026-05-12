@@ -42,6 +42,7 @@ class Product {
     const products = await this.collection
       .find(query)
       .skip(skip)
+      .sort({ created_at: -1 })
       .limit(limit)
       .toArray();
     const totalProducts = await this.collection.countDocuments({
