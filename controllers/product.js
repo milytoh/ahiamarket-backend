@@ -114,27 +114,30 @@ exports.deleteProduct = async (req, res, next) => {
     if (!vendor) {
       const error = new Error("operation not allowed, vendor not found");
       error.status = 401;
+      error.isOperational = true;
       throw error;
     }
 
     const productModel = await productfn();
     const product = await productModel.findProductById(productId);
 
-    if (product.vendorId.toString() !== vendor._id.toString()) {
+    if (product.vendorId !== vendor.userId) {
       const error = new Error("you can only delete your own product");
       error.status = 401;
+      error.isOperational = true;
       throw error;
     }
 
-    const request = await productModel.deleteProductById(productId);
+    const request = await productModel.deleteProductById(productId, userId);
 
     if (request.countDelete <= 0) {
       const error = new Error("product deletion failed");
       error.status = 404;
+      error.isOperational = true;
       throw error;
     }
 
-    res.status(200).json({
+    res.status(200).json({ 
       success: true,
       message: "product deleted",
     });
@@ -181,7 +184,7 @@ exports.getUpdateProduct = async (req, res, next) => {
 exports.updateProduct = async (req, res, next) => {
   const result = validationResult(req);
   const userId = req.user.userId;
-  const productId  = new ObjectId(req.params.id);
+  const productId = new ObjectId(req.params.id);
 
   console.log("product id", productId);
   const {
@@ -200,18 +203,15 @@ exports.updateProduct = async (req, res, next) => {
 
   const formattedstock = parseInt(stock);
 
- const newImages = req.files?.map((file) => file.filename) || [];
+  const newImages = req.files?.map((file) => file.filename) || [];
 
- let finalImages = [];
+  let finalImages = [];
 
- if (existingImages) {
-   finalImages = JSON.parse(existingImages); 
- }
+  if (existingImages) {
+    finalImages = JSON.parse(existingImages);
+  }
 
- finalImages = [...finalImages, ...newImages];
-
-
-
+  finalImages = [...finalImages, ...newImages];
 
   //checking if any field is invalid
   if (!result.isEmpty()) {
@@ -231,7 +231,7 @@ exports.updateProduct = async (req, res, next) => {
 
     // to check if a users is a vendor before creating a product
     const vendor = await vendorModel.findVendorByUserId(userId);
-    console.log("vendor", vendor);
+
     if (!vendor) {
       const error = new Error("this user is not a vendor, apply for a vendor ");
       error.isOperational = true;
@@ -260,22 +260,22 @@ exports.updateProduct = async (req, res, next) => {
       updated_at: Date.now(),
     };
 
-     await productModel.updateProduct(
+    await productModel.updateProduct(
       productId,
       vendor.userId,
       updateProductData,
     );
 
+    const oldImagesFromDB = product.images;
 
-  const oldImagesFromDB = product.images;
-  const removedImages = oldImagesFromDB.filter(
-    (img) => !existingImages.includes(img),
-  );
+    const removedImages = oldImagesFromDB.filter(
+      (img) => !existingImages.includes(img),
+    );
 
-  // delete from disk
-  removedImages.forEach((img) => {
-    fs.unlinkSync(`uploads/products/${img}`);
-  });
+    // delete from disk
+    removedImages.forEach((img) => {
+      fs.unlinkSync(`uploads/products/${img}`);
+    });
 
     res.status(201).json({
       success: true,

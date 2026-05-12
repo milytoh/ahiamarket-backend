@@ -54,8 +54,8 @@ class Product {
     return await this.collection.findOne({ _id: id });
   }
 
-  async deleteProductById(id) {
-    return await this.collection.deleteOne({ _id: id });
+  async deleteProductById(id, vendorId) {
+    return await this.collection.deleteOne({ _id: id, vendorId: vendorId });
   }
 
   async updateProduct(productId, vendorId, updatedProductData) {
