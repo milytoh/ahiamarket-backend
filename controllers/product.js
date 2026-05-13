@@ -209,6 +209,7 @@ exports.updateProduct = async (req, res, next) => {
     tags,
     podEnabled: pod,
     existingImages,
+    status
   } = req.body;
 
   const formattedPrice = parseFloat(parseFloat(unitPrice).toFixed(2));
@@ -269,6 +270,7 @@ exports.updateProduct = async (req, res, next) => {
       stock: formattedstock,
       tags: tags,
       pod: pod,
+      status: status,
       updated_at: Date.now(),
     };
 
@@ -301,7 +303,7 @@ exports.updateProduct = async (req, res, next) => {
 
 exports.cloneProduct = async (req, res, next) => {
   const userId = req.user.userId;
-  const productId = new ObjectId(req.params.id);
+  const productId = new ObjectId(req.body.productId);
 
   try {
     const vendorModel = await vendorfn();

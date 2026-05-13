@@ -11,7 +11,7 @@ router.get("/products", isAuth, productsController.allProducts);
 router.get("/product/:id/details", isAuth, productsController.productDetails);
 router.delete("/product/:id/delete", isAuth, productsController.deleteProduct);
 router.post(
-  "/vendor/product/:id/clone",
+  "/vendor/product/clone",
   isAuth,
   productsController.cloneProduct,
 );
@@ -36,12 +36,14 @@ router.put(
     .isLength({ min: 20, max: 1000 })
     .withMessage("description must be 15 or more charactershb")
     .trim(),
+
   body("unitPrice")
     .notEmpty()
     .withMessage("must not be empty")
     .isNumeric("must be number")
     .trim(),
   body("condition").notEmpty().withMessage("field must not be empty").trim(),
+  body("status").notEmpty().withMessage("field must not be empty").trim(),
   body("category")
     .notEmpty()
     .withMessage("category field must not be empty ")
