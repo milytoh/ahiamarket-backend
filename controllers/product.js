@@ -297,3 +297,71 @@ exports.updateProduct = async (req, res, next) => {
     next(error);
   }
 };
+
+
+exports.cloneProduct = async (req, res, next) => {
+  const userId = req.user.userId;
+  const productId = new ObjectId(req.params.id);
+
+  try {
+    const vendorModel = await vendorfn();
+    const productModel = await productfn();
+    // to check if a users is a vendor before creating a product
+    const vendor = await vendorModel.findVendorByUserId(userId);
+
+    if (!vendor) {
+      const error = new Error("this user is not a vendor, apply for a vendor ");
+      error.isOperational = true;
+      error.status = 404;
+      throw error;
+    }
+
+    const product = await productModel.findProductById(productId);
+
+    if (!product) {
+      const error = new Error("product not found");
+      error.status = 404;
+      throw error;
+    }
+
+    if (product.vendorId.toString() !== userId.toString()) {
+      const error = new Error("you can't clone this product");
+      error.isOperational = true;
+      error.status = 401;
+      throw error;
+    }
+
+    const clonedProductData = {
+      vendorId: userId,
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      currency: "NGN",
+      category: product.category,
+      condition: product.condition,
+      images: product.images,
+      stock: product.stock,
+      status: "draft",
+      tags: product.tags,
+      pod: product.pod,
+      rating: {
+        average: product.rating.average,
+        count: product.rating.count,
+      },
+      created_at: Date.now(),
+      updated_at: Date.now(),
+    };
+
+    await productModel.createProduct(clonedProductData);
+
+    res.status(201).json({
+      success: true,
+      message: "product cloned successfully",
+    })
+
+
+  } catch (error) {
+    next(error);
+   }
+
+ }
