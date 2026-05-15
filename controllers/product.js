@@ -15,6 +15,34 @@ async function vendorfn() {
   return new Vendor(db);
 }
 
+const fs = require("fs");
+const path = require("path");
+
+
+exports.getOneProduct = async (req, res, next) => {
+  const userId = req.user.userId;
+  const productId = new ObjectId(req.params.id);
+
+  try {
+    const productModel = await productfn();
+    const product = await productModel.findProductById(productId, userId);
+    if (!product) {
+      const error = new Error("product not found");
+      error.status = 404;
+      error.isOperational = true;
+      throw error;
+    }
+    res.status(200).json({
+      success: true,
+      message: "product found",
+      product,
+    });
+  } catch (err) {
+    next(err);
+  }
+}
+
+
 // getting all product from database
 exports.allProducts = async (req, res, next) => {
   try {
@@ -104,8 +132,7 @@ exports.productDetails = async (req, res, next) => {
 };
 
 exports.deleteProduct = async (req, res, next) => {
-  const fs = require("fs");
-  const path = require("path");
+  
   const productId = new ObjectId(req.params.id);
   const userId = req.user.userId;
   try {
@@ -131,13 +158,22 @@ exports.deleteProduct = async (req, res, next) => {
     }
 
     if (product.images && product.images.length > 0) {
-      product.images.forEach((image) => {
-        const imagePath = path.join(__dirname, "../uploads/products", image);
+    
+      for (const image of product.images) {
+        const imageStillUsed = await productModel.findImgBeforeDelete(
+          productId._id,
+          image,
+        );
 
-        if (fs.existsSync(imagePath)) {
-          fs.unlinkSync(imagePath);
+        // if no product uses it again
+        if (!imageStillUsed) {
+          const imagePath = path.join(__dirname, "../uploads/products", image);
+
+          if (fs.existsSync(imagePath)) {
+            fs.unlinkSync(imagePath);
+          }
         }
-      });
+      }
     }
 
     const request = await productModel.deleteProductById(productId, userId);
@@ -209,7 +245,7 @@ exports.updateProduct = async (req, res, next) => {
     tags,
     podEnabled: pod,
     existingImages,
-    status
+    status,
   } = req.body;
 
   const formattedPrice = parseFloat(parseFloat(unitPrice).toFixed(2));
@@ -300,7 +336,6 @@ exports.updateProduct = async (req, res, next) => {
   }
 };
 
-
 exports.cloneProduct = async (req, res, next) => {
   const userId = req.user.userId;
   const productId = new ObjectId(req.body.productId);
@@ -359,11 +394,8 @@ exports.cloneProduct = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: "product cloned successfully",
-    })
-
-
+    });
   } catch (error) {
     next(error);
-   }
-
- }
+  }
+};

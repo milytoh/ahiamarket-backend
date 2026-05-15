@@ -59,5 +59,6 @@ router.put(
   productsController.updateProduct,
 );
 router.get("/vendor/products", isAuth, productsController.vendorProducts);
+router.get("/vendor/product/:id", isAuth, productsController.getOneProduct);
 
 module.exports = router;

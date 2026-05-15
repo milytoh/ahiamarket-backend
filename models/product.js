@@ -51,8 +51,8 @@ class Product {
     return { products, totalProducts };
   }
 
-  async findProductById(id) {
-    return await this.collection.findOne({ _id: id });
+  async findProductById(id, userId) {
+    return await this.collection.findOne({ _id: id, vendorId: userId });
   }
 
   async deleteProductById(id, vendorId) {
@@ -100,6 +100,14 @@ class Product {
       },
     );
   }
+
+  async findImgBeforeDelete(productId, image) { 
+   return  await this.collection.findOne({
+        _id: { $ne: productId },
+        images: image,
+      });
+  }
 }
 
 module.exports = Product;
+    
