@@ -10,11 +10,7 @@ const validateUpdateImages = require("../utils/updateProductImgValidate");
 router.get("/products", isAuth, productsController.allProducts);
 router.get("/product/:id/details", isAuth, productsController.productDetails);
 router.delete("/product/:id/delete", isAuth, productsController.deleteProduct);
-router.post(
-  "/vendor/product/clone",
-  isAuth,
-  productsController.cloneProduct,
-);
+router.post("/vendor/product/clone", isAuth, productsController.cloneProduct);
 
 router.get(
   "/vendor/product/:id/update",
@@ -62,3 +58,4 @@ router.get("/vendor/products", isAuth, productsController.vendorProducts);
 router.get("/vendor/product/:id", isAuth, productsController.getOneProduct);
 
 module.exports = router;
+  

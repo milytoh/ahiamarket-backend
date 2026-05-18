@@ -198,6 +198,8 @@ exports.getUpdateProduct = async (req, res, next) => {
   const productId = new ObjectId(req.params.id);
   const userId = req.user.userId;
 
+
+
   try {
     //checking if someon is a vendor before deleting a product
     const vendorModel = await vendorfn();
@@ -210,7 +212,15 @@ exports.getUpdateProduct = async (req, res, next) => {
     }
 
     const productModel = await productfn();
-    const product = await productModel.findProductById(productId);
+    const product = await productModel.findProductById(productId, userId);
+
+    if(!product) {
+      const err = new Error("Product not found");
+      err.status = 404;
+      err.isOperetional = true;
+      throw err
+    }
+
 
     if (product.vendorId.toString() !== vendor.userId.toString()) {
       const error = new Error("you can only edit your own product");
