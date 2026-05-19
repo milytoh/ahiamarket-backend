@@ -175,6 +175,10 @@ exports.createProduct = async (req, res, next) => {
       throw error;
     }
 
+    const avatarSeed = name + Date.now();
+
+    const avater_img = `https://api.dicebear.com/7.x/shapes/svg?seed=${avatarSeed}`;
+
     const productData = {
       vendorId: userId,
       name: name,
@@ -184,10 +188,12 @@ exports.createProduct = async (req, res, next) => {
       category: category,
       condition: condition,
       images: images,
+      avatar_img: avater_img,
       stock: formattedstock,
       status: "active",
       tags: tags,
       pod: pod,
+      cover_url: null,
       rating: {
         average: null,
         count: null,
@@ -277,7 +283,7 @@ exports.visibleUpdate = async (req, res, next) => {
 
     const prodId = new ObjectId(req.body.id);
 
-   const visible = JSON.parse(req.body.visible);
+    const visible = JSON.parse(req.body.visible);
 
     const productModel = await productfn();
 

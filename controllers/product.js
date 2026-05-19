@@ -18,7 +18,6 @@ async function vendorfn() {
 const fs = require("fs");
 const path = require("path");
 
-
 exports.getOneProduct = async (req, res, next) => {
   const userId = req.user.userId;
   const productId = new ObjectId(req.params.id);
@@ -40,8 +39,7 @@ exports.getOneProduct = async (req, res, next) => {
   } catch (err) {
     next(err);
   }
-}
-
+};
 
 // getting all product from database
 exports.allProducts = async (req, res, next) => {
@@ -132,7 +130,6 @@ exports.productDetails = async (req, res, next) => {
 };
 
 exports.deleteProduct = async (req, res, next) => {
-  
   const productId = new ObjectId(req.params.id);
   const userId = req.user.userId;
   try {
@@ -158,7 +155,6 @@ exports.deleteProduct = async (req, res, next) => {
     }
 
     if (product.images && product.images.length > 0) {
-    
       for (const image of product.images) {
         const imageStillUsed = await productModel.findImgBeforeDelete(
           productId._id,
@@ -198,8 +194,6 @@ exports.getUpdateProduct = async (req, res, next) => {
   const productId = new ObjectId(req.params.id);
   const userId = req.user.userId;
 
-
-
   try {
     //checking if someon is a vendor before deleting a product
     const vendorModel = await vendorfn();
@@ -214,13 +208,12 @@ exports.getUpdateProduct = async (req, res, next) => {
     const productModel = await productfn();
     const product = await productModel.findProductById(productId, userId);
 
-    if(!product) {
+    if (!product) {
       const err = new Error("Product not found");
       err.status = 404;
       err.isOperetional = true;
-      throw err
+      throw err;
     }
-
 
     if (product.vendorId.toString() !== vendor.userId.toString()) {
       const error = new Error("you can only edit your own product");
@@ -244,7 +237,6 @@ exports.updateProduct = async (req, res, next) => {
   const userId = req.user.userId;
   const productId = new ObjectId(req.params.id);
 
-  console.log("product id", productId);
   const {
     productName: name,
     description,
